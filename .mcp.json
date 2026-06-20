@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "fal-ai": {
+      "type": "http",
+      "url": "https://mcp.fal.ai/mcp",
+      "headers": {
+        "Authorization": "Bearer 9d4ce4e1-d10d-419d-b52b-0d06d9ec7733:3fe74a001fe165d908c86b3ffb7a7160"
+      }
+    }
+  }
+}

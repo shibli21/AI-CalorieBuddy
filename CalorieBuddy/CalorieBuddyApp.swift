@@ -2,7 +2,7 @@
 //  CalorieBuddyApp.swift
 //  CalorieBuddy
 //
-//  Created by syed shibli mahmud on 20/6/26.
+//  App entry point: builds the SwiftData container and injects app state + services.
 //
 
 import SwiftUI
@@ -10,23 +10,29 @@ import SwiftData
 
 @main
 struct CalorieBuddyApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+    @State private var appState = AppState()
+    @State private var ai = AIService()
+    @State private var store = StoreService()
+    @State private var health = HealthKitService()
+    @State private var notifications = NotificationService()
 
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    private let container = AppContainer.make()
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .environment(appState)
+                .environment(ai)
+                .environment(store)
+                .environment(health)
+                .environment(notifications)
+                .tint(Theme.accent)
+                .preferredColorScheme(appState.preferredColorScheme)
+                .task {
+                    await store.loadProducts()
+                    await store.refreshEntitlements()
+                }
         }
-        .modelContainer(sharedModelContainer)
+        .modelContainer(container)
     }
 }

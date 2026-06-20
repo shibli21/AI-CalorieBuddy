@@ -1,0 +1,11 @@
+name = "caloriebuddy-ai-proxy"
+main = "worker.js"
+compatibility_date = "2025-09-01"
+
+# Secrets (do NOT put real values here — use `wrangler secret put`):
+#   wrangler secret put ANTHROPIC_API_KEY
+#   wrangler secret put APP_SECRET        # optional
+#
+# Non-secret default model can be set as a plain var:
+[vars]
+MODEL = "claude-haiku-4-5-20251001"
