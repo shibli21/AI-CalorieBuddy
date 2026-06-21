@@ -115,7 +115,12 @@ struct OnboardingFlow: View {
         case .reminderTime:
             ReminderTimeStep(enabled: $vm.draft.remindersEnabled, hour: $vm.draft.reminderHour) {
                 if vm.draft.remindersEnabled {
-                    Task { _ = await notifications.requestAuthorization(); proceed() }
+                    Task {
+                        // Keep the saved preference in sync with what was actually granted,
+                        // so we never persist reminders as "on" after a denied system prompt.
+                        vm.draft.remindersEnabled = await notifications.requestAuthorization()
+                        proceed()
+                    }
                 } else {
                     proceed()
                 }
@@ -220,9 +225,11 @@ struct OnboardingFlow: View {
                        onContinue: proceed)
 
         case .realisticTarget:
-            InfoStep(title: "Your goal looks realistic",
-                     subtitle: "We'll keep your plan safe and sustainable.",
-                     mascot: .target,
+            let assessment = vm.targetAssessment
+            InfoStep(title: assessment.title,
+                     subtitle: assessment.subtitle,
+                     mascot: assessment.mascot,
+                     continueTitle: assessment.continueTitle,
                      onContinue: proceed)
 
         case .calculating:

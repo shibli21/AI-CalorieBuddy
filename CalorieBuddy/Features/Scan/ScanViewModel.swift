@@ -43,9 +43,15 @@ final class ScanViewModel {
             if ai.isConfigured, let data = image.jpegForUpload() {
                 result = try await ai.analyze(imageData: data, mode: mode)
             } else {
-                // No proxy configured yet — fall back to a mock so the flow works.
+                #if DEBUG
+                // No proxy configured yet — use a sample result so the flow is
+                // testable in development. Never ship fabricated data: release
+                // builds surface a real error instead (see #else).
                 try? await Task.sleep(for: .seconds(1.2))
                 result = AIService.mockResult()
+                #else
+                throw AIError.notConfigured
+                #endif
             }
         } catch {
             errorMessage = (error as? AIError)?.errorDescription ?? error.localizedDescription
@@ -108,7 +114,7 @@ final class ScanViewModel {
         entry.day = Self.fetchOrCreateDay(context: context, date: loggedAt)
 
         context.insert(entry)
-        let advanced = DiaryStore.registerStreak(streak, on: loggedAt)
+        let advanced = DiaryStore.registerStreak(streak, on: loggedAt, in: context)
         try? context.save()
 
         ScanQuota.record()

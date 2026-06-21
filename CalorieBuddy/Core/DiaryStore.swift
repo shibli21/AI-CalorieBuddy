@@ -19,14 +19,26 @@ enum DiaryStore {
         return day
     }
 
-    /// Register a log against the streak; returns the new streak count only if
-    /// it advanced (so callers can trigger a celebration).
+    /// The app's single logging streak, creating and inserting one if none exists
+    /// yet. Keeps the streak working even if it was never seeded at onboarding.
     @MainActor
-    static func registerStreak(_ streak: Streak?, on date: Date) -> Int? {
-        guard let streak else { return nil }
-        let before = streak.current
-        streak.registerLog(on: date)
-        return streak.current > before ? streak.current : nil
+    @discardableResult
+    static func streak(in context: ModelContext) -> Streak {
+        if let existing = try? context.fetch(FetchDescriptor<Streak>()).first { return existing }
+        let created = Streak()
+        context.insert(created)
+        return created
+    }
+
+    /// Register a log against the streak; returns the new streak count only if
+    /// it advanced (so callers can trigger a celebration). Falls back to the
+    /// stored/created streak when `streak` is nil so logging always counts.
+    @MainActor
+    static func registerStreak(_ streak: Streak?, on date: Date, in context: ModelContext) -> Int? {
+        let target = streak ?? self.streak(in: context)
+        let before = target.current
+        target.registerLog(on: date)
+        return target.current > before ? target.current : nil
     }
 
     /// Timestamp to use when logging on a given calendar day: now if it's today,

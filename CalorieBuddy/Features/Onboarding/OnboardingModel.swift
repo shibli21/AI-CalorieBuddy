@@ -56,6 +56,37 @@ enum OnboardingPage: Hashable {
     case calculating, planReveal, rating, auth
 }
 
+/// Sanity check on the chosen target weight, so the `realisticTarget` step
+/// reflects the actual input instead of always congratulating the user.
+enum TargetAssessment: Equatable {
+    case realistic
+    case directionMismatch  // target contradicts the stated goal
+    case tooLow             // target below a healthy BMI
+
+    var mascot: MascotMood { self == .realistic ? .target : .worried }
+
+    var title: String {
+        switch self {
+        case .realistic: "Your goal looks realistic"
+        case .directionMismatch: "Let's double-check your target"
+        case .tooLow: "Let's keep it healthy"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .realistic:
+            "We'll keep your plan safe and sustainable."
+        case .directionMismatch:
+            "Your target weight points the opposite way to your goal. Tap back to adjust your goal or target."
+        case .tooLow:
+            "That target is below a healthy weight for your height. Consider a higher one — tap back to adjust."
+        }
+    }
+
+    var continueTitle: String { self == .realistic ? "Continue" : "Continue anyway" }
+}
+
 @Observable
 final class OnboardingViewModel {
     var draft = OnboardingDraft()
@@ -68,8 +99,8 @@ final class OnboardingViewModel {
         .remindersIntro, .reminderTime,
         .eatingHabitsIntro, .mealsPerDay, .eatingWindow, .eatingLocation, .diet, .restrictions,
         .waterIntro, .medicalDisclaimer, .habitGoals, .goalConfirmation,
-        .sex, .age, .activity, .height, .weight, .summary,
-        .targetWeight, .pace, .realisticTarget,
+        .sex, .age, .activity, .height, .weight, .targetWeight, .summary,
+        .pace, .realisticTarget,
         .calculating, .planReveal, .rating, .auth,
     ]
 
@@ -125,6 +156,22 @@ final class OnboardingViewModel {
         NutritionMath.projectedGoalDate(currentKg: draft.currentWeightKg, targetKg: draft.targetWeightKg, pace: draft.pace)
     }
 
+    /// Validates the target weight against the stated goal and a healthy BMI floor.
+    var targetAssessment: TargetAssessment {
+        let delta = draft.targetWeightKg - draft.currentWeightKg
+        let directionOK: Bool
+        switch draft.goal {
+        case .lose: directionOK = delta < 0
+        case .gain: directionOK = delta > 0
+        case .maintain: directionOK = abs(delta) <= 2
+        }
+        if !directionOK { return .directionMismatch }
+
+        let targetBMI = NutritionMath.bmi(weightKg: draft.targetWeightKg, heightCm: draft.heightCm)
+        if targetBMI < 18.5 { return .tooLow }
+        return .realistic
+    }
+
     // MARK: - Commit
 
     @MainActor
@@ -141,6 +188,8 @@ final class OnboardingViewModel {
         profile.goalPace = draft.pace
         profile.dietType = draft.diet
         profile.restrictions = Array(draft.restrictions)
+        profile.fastingPresetHours = NutritionMath.fastingPreset(
+            eatingStartHour: draft.eatingWindowStart, eatingEndHour: draft.eatingWindowEnd)
         profile.mascotName = draft.mascotName.isEmpty ? "Buddy" : draft.mascotName
         profile.remindersEnabled = draft.remindersEnabled
         profile.reminderHour = draft.reminderHour
@@ -151,6 +200,8 @@ final class OnboardingViewModel {
 
         // Seed a baseline weight entry.
         context.insert(WeightEntry(weightKg: draft.currentWeightKg, date: .now))
+        // Seed the logging streak so the counter + celebration work from day one.
+        DiaryStore.streak(in: context)
         try? context.save()
 
         if draft.remindersEnabled {

@@ -163,7 +163,7 @@ struct DiaryDayContent: View {
         }
         entry.day = DiaryStore.day(for: when, in: context)
         context.insert(entry)
-        if let advanced = DiaryStore.registerStreak(streaks.first, on: when) {
+        if let advanced = DiaryStore.registerStreak(streaks.first, on: when, in: context) {
             appState.celebrationDay = advanced
         }
         try? context.save()

@@ -14,6 +14,7 @@ struct SettingsView: View {
     @Environment(AppState.self) private var appState
     @Environment(StoreService.self) private var store
     @Environment(NotificationService.self) private var notifications
+    @Environment(HealthKitService.self) private var health
     @Query private var profiles: [UserProfile]
 
     @State private var showDelete = false
@@ -86,6 +87,25 @@ struct SettingsView: View {
                             Label("Your buddy", systemImage: "pawprint.fill")
                         }
                     }
+                }
+
+                Section {
+                    if health.isAvailable {
+                        Button {
+                            Task { _ = await health.requestAuthorization() }
+                        } label: {
+                            Label(health.isAuthorized ? "Apple Health connected" : "Connect Apple Health",
+                                  systemImage: "heart.fill")
+                        }
+                        .disabled(health.isAuthorized)
+                    } else {
+                        Label("Apple Health unavailable", systemImage: "heart.slash")
+                            .foregroundStyle(.secondary)
+                    }
+                } header: {
+                    Text("Apple Health")
+                } footer: {
+                    Text("Mirror your meals, water, and weight to Apple Health, and read your active energy back.")
                 }
 
                 Section("About") {

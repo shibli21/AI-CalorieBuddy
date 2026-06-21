@@ -124,10 +124,13 @@ struct DayDashboard: View {
     // MARK: Actions
 
     private func addWater(_ ml: Int) {
-        let log = WaterLog(amountMl: ml, loggedAt: .now)
+        // Log against the day being viewed, not always today, so the entry shows
+        // up in the card the user tapped (matches WaterView.add).
+        let when = DiaryStore.timestamp(for: date)
+        let log = WaterLog(amountMl: ml, loggedAt: when)
         context.insert(log)
         try? context.save()
-        Task { await health.saveWater(ml: ml) }
+        Task { await health.saveWater(ml: ml, date: when) }
         Haptics.tap()
     }
 

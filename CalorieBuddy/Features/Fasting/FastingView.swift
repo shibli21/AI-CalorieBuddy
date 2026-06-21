@@ -14,6 +14,7 @@ struct FastingView: View {
     @Environment(\.modelContext) private var context
     @Environment(NotificationService.self) private var notifications
     @Query private var fasts: [FastingSession]
+    @Query private var profiles: [UserProfile]
 
     init() {
         _fasts = Query(sort: \FastingSession.startAt, order: .reverse)
@@ -28,7 +29,9 @@ struct FastingView: View {
                 if let active {
                     ActiveFastingView(session: active, onEnd: endFast, onCancel: cancelFast)
                 } else {
-                    StartFastingView(recent: recent, onStart: startFast)
+                    StartFastingView(recent: recent,
+                                     defaultPreset: profiles.first?.fastingPresetHours ?? 16,
+                                     onStart: startFast)
                 }
             }
             .background(Theme.background)
@@ -168,12 +171,18 @@ private struct StartFastingView: View {
     let recent: [FastingSession]
     var onStart: (Int, Date, Bool) -> Void
 
-    @State private var preset = 16
+    @State private var preset: Int
     @State private var startNow = true
     @State private var customStart = Date.now
     @State private var includeLastMeal = false
 
-    private let presets = [12, 14, 16, 18]
+    private static let presets = [12, 14, 16, 18]
+
+    init(recent: [FastingSession], defaultPreset: Int, onStart: @escaping (Int, Date, Bool) -> Void) {
+        self.recent = recent
+        self.onStart = onStart
+        _preset = State(initialValue: Self.presets.contains(defaultPreset) ? defaultPreset : 16)
+    }
 
     var body: some View {
         ScrollView {
@@ -184,7 +193,7 @@ private struct StartFastingView: View {
                     .foregroundStyle(Theme.ink)
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.md) {
-                    ForEach(presets, id: \.self) { hours in
+                    ForEach(Self.presets, id: \.self) { hours in
                         Button {
                             Haptics.selection()
                             preset = hours

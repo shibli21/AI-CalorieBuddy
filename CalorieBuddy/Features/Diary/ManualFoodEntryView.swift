@@ -80,7 +80,7 @@ struct ManualFoodEntryView: View {
         entry.fiber = fiber
         entry.day = DiaryStore.day(for: when, in: context)
         context.insert(entry)
-        let advanced = DiaryStore.registerStreak(streaks.first, on: when)
+        let advanced = DiaryStore.registerStreak(streaks.first, on: when, in: context)
         try? context.save()
         Task { await health.save(foodEntry: entry) }
         Haptics.success()

@@ -50,6 +50,18 @@ enum NutritionMath {
         return (p, c, f)
     }
 
+    /// The closest supported fasting preset (hours fasting) for an eating window.
+    /// e.g. an 8am–8pm window (12h eating) snaps to a 12h fast. Handles windows
+    /// that wrap past midnight (start > end).
+    static func fastingPreset(eatingStartHour: Int, eatingEndHour: Int,
+                              presets: [Int] = [12, 14, 16, 18]) -> Int {
+        let eating = eatingEndHour > eatingStartHour
+            ? eatingEndHour - eatingStartHour
+            : (eatingEndHour + 24) - eatingStartHour
+        let fasting = 24 - eating
+        return presets.min(by: { abs($0 - fasting) < abs($1 - fasting) }) ?? 16
+    }
+
     /// Recommended daily water (ml), rounded to the nearest 50.
     static func waterGoalMl(weightKg: Double, activity: ActivityLevel) -> Int {
         let base = weightKg * 35.0
