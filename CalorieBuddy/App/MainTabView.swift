@@ -12,6 +12,17 @@ import SwiftData
 struct MainTabView: View {
     @Environment(AppState.self) private var appState
     @Environment(StoreService.self) private var store
+    @Query private var firstEntries: [FoodEntry]
+    @AppStorage("cb.coachmarkSeen") private var coachmarkSeen = false
+
+    init() {
+        var descriptor = FetchDescriptor<FoodEntry>()
+        descriptor.fetchLimit = 1
+        _firstEntries = Query(descriptor)
+    }
+
+    /// Show the first-run hint until the user has logged anything (or dismissed it).
+    private var showCoachmark: Bool { !coachmarkSeen && firstEntries.isEmpty }
 
     var body: some View {
         @Bindable var appState = appState
@@ -47,7 +58,14 @@ struct MainTabView: View {
                     .zIndex(10)
             }
         }
+        .overlay {
+            if showCoachmark {
+                CoachmarkOverlay { coachmarkSeen = true }
+                    .zIndex(20)
+            }
+        }
         .animation(.smooth(duration: 0.3), value: appState.celebrationDay)
+        .animation(.smooth(duration: 0.3), value: showCoachmark)
         .task {
             // Final onboarding step: surface the paywall once the shell is up.
             guard appState.pendingPostOnboardingPaywall else { return }
@@ -55,6 +73,45 @@ struct MainTabView: View {
             try? await Task.sleep(for: .seconds(0.6))
             if !store.isPro { appState.presentPaywall(context: "onboarding") }
         }
+    }
+}
+
+/// First-run hint that dims the screen and points at the scan button.
+private struct CoachmarkOverlay: View {
+    var onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.55).ignoresSafeArea()
+            VStack {
+                Spacer()
+                VStack(spacing: Spacing.sm) {
+                    MascotView(mood: .scanning, size: 64)
+                    Text("Log your first meal")
+                        .font(CBFont.title3)
+                        .foregroundStyle(.white)
+                    Text("Tap the camera below — snap a photo and let AI do the counting.")
+                        .font(CBFont.subheadline)
+                        .foregroundStyle(.white.opacity(0.85))
+                        .multilineTextAlignment(.center)
+                    Image(systemName: "arrow.down")
+                        .font(.system(size: 30, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .frame(maxWidth: 300)
+                .padding(.bottom, 96)
+            }
+            Text("Tap anywhere to dismiss")
+                .font(CBFont.caption)
+                .foregroundStyle(.white.opacity(0.6))
+                .padding(.top, 80)
+                .frame(maxHeight: .infinity, alignment: .top)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { onDismiss() }
+        .transition(.opacity)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel("Log your first meal. Tap the camera button to scan a meal. Double-tap to dismiss this hint.")
     }
 }
 
