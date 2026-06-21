@@ -21,6 +21,7 @@ struct DiaryDayContent: View {
     @Query private var entries: [FoodEntry]
     @Query private var recentEntries: [FoodEntry]
     @Query private var streaks: [Streak]
+    @State private var toast: ToastMessage?
 
     init(date: Date, profile: UserProfile?, onAddManual: @escaping () -> Void) {
         self.date = date
@@ -67,6 +68,7 @@ struct DiaryDayContent: View {
                 )
             }
         }
+        .cbToast($toast)
     }
 
     private var summaryBar: some View {
@@ -169,11 +171,13 @@ struct DiaryDayContent: View {
         try? context.save()
         Task { await health.save(foodEntry: entry) }
         Haptics.success()
+        toast = ToastMessage(text: "\(template.name) logged again", systemImage: "arrow.clockwise")
     }
 
     private func delete(_ entry: FoodEntry) {
         context.delete(entry)
         try? context.save()
         Haptics.warning()
+        toast = ToastMessage(text: "Meal removed", systemImage: "trash", tint: Theme.berry)
     }
 }

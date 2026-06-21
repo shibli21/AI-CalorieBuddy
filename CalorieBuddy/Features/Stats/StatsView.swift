@@ -16,6 +16,7 @@ struct StatsView: View {
     @Query private var entries: [FoodEntry]
     @Query private var streaks: [Streak]
     @State private var range = 7
+    @State private var showLogWeight = false
 
     private var profile: UserProfile? { profiles.first }
     private var target: Int { profile?.calorieTarget ?? 2000 }
@@ -52,6 +53,16 @@ struct StatsView: View {
             .background(Theme.background)
             .navigationTitle("Stats")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showLogWeight = true } label: {
+                        Label("Log weight", systemImage: "scalemass")
+                    }
+                }
+            }
+            .sheet(isPresented: $showLogWeight) {
+                LogWeightSheet(initialKg: profile?.currentWeightKg ?? 70)
+            }
         }
     }
 
@@ -137,10 +148,16 @@ struct StatsView: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             Text("Weight").font(CBFont.headline).foregroundStyle(Theme.ink)
             if weightInRange.count < 2 {
-                Text("Log your weight to see your trend.")
-                    .font(CBFont.subheadline)
-                    .foregroundStyle(Theme.inkTertiary)
+                Button { showLogWeight = true } label: {
+                    VStack(spacing: Spacing.xs) {
+                        Image(systemName: "scalemass").font(.title2).foregroundStyle(Theme.accent)
+                        Text("Log your weight to see your trend.")
+                            .font(CBFont.subheadline)
+                            .foregroundStyle(Theme.inkSecondary)
+                    }
                     .frame(maxWidth: .infinity, minHeight: 120)
+                }
+                .buttonStyle(.plain)
             } else {
                 Chart {
                     ForEach(weightInRange) { entry in

@@ -24,6 +24,9 @@ struct DayDashboard: View {
 
     @State private var showWater = false
     @State private var showFasting = false
+    @State private var toast: ToastMessage?
+
+    private let fiberGoal = 28
 
     init(date: Date, profile: UserProfile?) {
         self.date = date
@@ -42,8 +45,13 @@ struct DayDashboard: View {
     private var protein: Int { entries.reduce(0) { $0 + $1.protein } }
     private var carbs: Int { entries.reduce(0) { $0 + $1.carbs } }
     private var fat: Int { entries.reduce(0) { $0 + $1.fat } }
+    private var fiber: Int { entries.reduce(0) { $0 + $1.fiber } }
     private var waterTotal: Int { waters.reduce(0) { $0 + $1.amountMl } }
     private var activeFast: FastingSession? { fasts.first { $0.state == .active } }
+
+    private var nutritionScore: Int {
+        NutritionScore.dayScore(consumed: consumed, target: target, protein: protein, fiber: fiber)
+    }
 
     private var target: Int { profile?.calorieTarget ?? 2000 }
     private var waterGoal: Int { profile?.waterGoalMl ?? 2500 }
@@ -57,6 +65,7 @@ struct DayDashboard: View {
             statsRow
             mealsList
         }
+        .cbToast($toast)
         .sheet(isPresented: $showWater) {
             WaterView(date: date)
         }
@@ -83,16 +92,28 @@ struct DayDashboard: View {
     // MARK: Stats
 
     private var statsRow: some View {
-        HStack(spacing: Spacing.md) {
-            DayStatCard(icon: "drop.fill", tint: Theme.water,
-                        value: "\(waterTotal) ml", label: "of \(waterGoal) ml",
-                        progress: waterGoal > 0 ? Double(waterTotal) / Double(waterGoal) : 0,
-                        addAction: { addWater(250) },
-                        tapAction: { showWater = true })
+        VStack(spacing: Spacing.md) {
+            HStack(spacing: Spacing.md) {
+                DayStatCard(icon: "drop.fill", tint: Theme.water,
+                            value: "\(waterTotal) ml", label: "of \(waterGoal) ml",
+                            progress: waterGoal > 0 ? Double(waterTotal) / Double(waterGoal) : 0,
+                            addAction: { addWater(250) },
+                            tapAction: { showWater = true })
 
-            DayStatCard(icon: "timer", tint: Theme.grape,
-                        value: fastingValue, label: fastingLabel,
-                        tapAction: { showFasting = true })
+                DayStatCard(icon: "timer", tint: Theme.grape,
+                            value: fastingValue, label: fastingLabel,
+                            tapAction: { showFasting = true })
+            }
+            HStack(spacing: Spacing.md) {
+                DayStatCard(icon: "rosette", tint: Theme.berry,
+                            value: entries.isEmpty ? "—" : "\(nutritionScore)",
+                            label: entries.isEmpty ? "No meals yet" : NutritionScore.grade(nutritionScore),
+                            progress: entries.isEmpty ? nil : Double(nutritionScore) / 100)
+
+                DayStatCard(icon: "leaf.fill", tint: Theme.accent,
+                            value: "\(fiber) g", label: "of \(fiberGoal) g fiber",
+                            progress: fiberGoal > 0 ? Double(fiber) / Double(fiberGoal) : 0)
+            }
         }
     }
 
@@ -132,11 +153,13 @@ struct DayDashboard: View {
         try? context.save()
         Task { await health.saveWater(ml: ml, date: when) }
         Haptics.tap()
+        toast = ToastMessage(text: "+\(ml) ml water", systemImage: "drop.fill", tint: Theme.water)
     }
 
     private func delete(_ entry: FoodEntry) {
         context.delete(entry)
         try? context.save()
         Haptics.warning()
+        toast = ToastMessage(text: "Meal removed", systemImage: "trash", tint: Theme.berry)
     }
 }
