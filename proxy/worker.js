@@ -4,12 +4,20 @@
 // app calls with a base64 image. Returns structured nutrition JSON matching the
 // app's AIScanResult.
 //
-// Env vars (set with `wrangler secret put`):
-//   ANTHROPIC_API_KEY  (required)
-//   APP_SECRET         (optional shared secret; if set, app must send X-App-Secret)
-//   MODEL              (optional, default below)
+// Env vars (set with `wrangler secret put` / wrangler.toml [vars]):
+//   ANTHROPIC_API_KEY     (required)
+//   APP_SECRET            (optional shared secret; if set, app must send X-App-Secret)
+//   MODEL                 (optional, default below)
+//   ESCALATION_MODEL      (optional, default below; set "" to disable escalation)
+//   CONFIDENCE_THRESHOLD  (optional, default 0.6)
+//
+// Default: Claude Haiku 4.5 for cost/latency; if the model reports low overall
+// confidence, the request is retried once with Claude Sonnet 4.6 for accuracy.
+// (Verify these IDs against the current Anthropic model list before going live.)
 
-const DEFAULT_MODEL = "claude-haiku-4-5-20251001"; // bump to claude-sonnet-4-6 for higher accuracy
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+const DEFAULT_ESCALATION_MODEL = "claude-sonnet-4-6";
+const DEFAULT_CONFIDENCE_THRESHOLD = 0.6;
 
 const NUTRITION_TOOL = {
   name: "log_nutrition",
@@ -66,6 +74,46 @@ function json(obj, status = 200) {
   });
 }
 
+// Single Anthropic call forcing the log_nutrition tool. Returns
+// { ok, status, detail, input } — `input` is the tool result (AIScanResult-shaped).
+async function callAnthropic(env, model, system, content) {
+  const payload = {
+    model,
+    max_tokens: 1024,
+    system,
+    tools: [NUTRITION_TOOL],
+    tool_choice: { type: "tool", name: "log_nutrition" },
+    messages: [{ role: "user", content }],
+  };
+
+  let resp;
+  try {
+    resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (e) {
+    return { ok: false, status: 502, detail: `upstream fetch failed: ${String(e)}` };
+  }
+
+  if (!resp.ok) {
+    const detail = await resp.text();
+    return { ok: false, status: resp.status, detail };
+  }
+
+  const data = await resp.json();
+  const toolUse = (data.content || []).find((c) => c.type === "tool_use");
+  if (!toolUse || !toolUse.input) {
+    return { ok: false, status: 502, detail: "no structured output" };
+  }
+  return { ok: true, input: toolUse.input };
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors() });
@@ -94,49 +142,28 @@ export default {
         : "You are a nutrition estimator. Identify each food in the photo, estimate realistic portion sizes, and return calories and macros via the log_nutrition tool. Prefer common serving sizes. Be honest about uncertainty in the confidence field.";
 
     const userText = hint ? `Additional context from the user: ${hint}` : "Analyze this food image.";
+    const content = [
+      { type: "image", source: { type: "base64", media_type: "image/jpeg", data: image_base64 } },
+      { type: "text", text: userText },
+    ];
 
-    const payload = {
-      model: env.MODEL || DEFAULT_MODEL,
-      max_tokens: 1024,
-      system,
-      tools: [NUTRITION_TOOL],
-      tool_choice: { type: "tool", name: "log_nutrition" },
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: image_base64 } },
-            { type: "text", text: userText },
-          ],
-        },
-      ],
-    };
+    const firstModel = env.MODEL || DEFAULT_MODEL;
+    const escalationModel =
+      env.ESCALATION_MODEL !== undefined ? env.ESCALATION_MODEL : DEFAULT_ESCALATION_MODEL;
+    const threshold = Number(env.CONFIDENCE_THRESHOLD ?? DEFAULT_CONFIDENCE_THRESHOLD);
 
-    let resp;
-    try {
-      resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "x-api-key": env.ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-    } catch (e) {
-      return json({ error: "upstream fetch failed", detail: String(e) }, 502);
+    // Pass 1 — fast model.
+    let result = await callAnthropic(env, firstModel, system, content);
+    if (!result.ok) return json({ error: "anthropic error", status: result.status, detail: result.detail }, 502);
+
+    // Pass 2 — escalate to a stronger model on low confidence.
+    const confidence = Number(result.input.confidence ?? 1);
+    if (escalationModel && escalationModel !== firstModel && confidence < threshold) {
+      const escalated = await callAnthropic(env, escalationModel, system, content);
+      if (escalated.ok) result = escalated; // keep pass-1 result if escalation fails
     }
 
-    if (!resp.ok) {
-      const detail = await resp.text();
-      return json({ error: "anthropic error", status: resp.status, detail }, 502);
-    }
-
-    const data = await resp.json();
-    const toolUse = (data.content || []).find((c) => c.type === "tool_use");
-    if (!toolUse || !toolUse.input) return json({ error: "no structured output" }, 502);
-
-    // toolUse.input already matches the app's AIScanResult shape.
-    return json(toolUse.input, 200);
+    // result.input already matches the app's AIScanResult shape.
+    return json(result.input, 200);
   },
 };

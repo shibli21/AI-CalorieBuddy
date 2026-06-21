@@ -9,12 +9,13 @@
 import Foundation
 
 enum ScanMode: String, Codable, Sendable, CaseIterable {
-    case meal, label, barcode
+    // Barcode capture is intentionally omitted: a real barcode→nutrition lookup
+    // needs a licensed food database, which SPEC §12 lists as a v1 non-goal.
+    case meal, label
     var title: String {
         switch self {
         case .meal: "Meal"
         case .label: "Label"
-        case .barcode: "Barcode"
         }
     }
 }

@@ -20,7 +20,7 @@ struct PaywallView: View {
 
     private let features: [(icon: String, text: String)] = [
         ("infinity", "Unlimited AI meal scans"),
-        ("barcode.viewfinder", "Barcode & nutrition-label scanning"),
+        ("doc.viewfinder", "Nutrition-label scanning"),
         ("chart.bar.xaxis", "Full stats, trends & history"),
         ("timer", "Advanced fasting & water goals"),
         ("paintbrush.fill", "App icons, themes & your buddy"),
