@@ -113,3 +113,29 @@ final class AwardRecord {
         self.earnedAt = earnedAt
     }
 }
+
+/// A starred food cached for fast re-logging. Stores the meal-level totals
+/// (not itemized ingredients) — enough to re-create a FoodEntry in one tap.
+@Model
+final class FavoriteFood {
+    var id: UUID = UUID()
+    var name: String = ""
+    var totalKcal: Int = 0
+    var protein: Int = 0
+    var carbs: Int = 0
+    var fat: Int = 0
+    var fiber: Int = 0
+    var servingDesc: String = ""
+    var createdAt: Date = Date.now
+
+    init(name: String = "", totalKcal: Int = 0, protein: Int = 0, carbs: Int = 0,
+         fat: Int = 0, fiber: Int = 0, servingDesc: String = "") {
+        self.name = name
+        self.totalKcal = totalKcal
+        self.protein = protein
+        self.carbs = carbs
+        self.fat = fat
+        self.fiber = fiber
+        self.servingDesc = servingDesc
+    }
+}

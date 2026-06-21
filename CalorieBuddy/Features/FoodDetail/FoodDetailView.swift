@@ -14,6 +14,7 @@ struct FoodDetailView: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @Query private var favorites: [FavoriteFood]
 
     @State private var showEdit = false
     @State private var showDelete = false
@@ -43,6 +44,10 @@ struct FoodDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button { showEdit = true } label: { Label("Edit", systemImage: "pencil") }
+                    Button { toggleFavorite() } label: {
+                        Label(isFavorited ? "Remove favorite" : "Save as favorite",
+                              systemImage: isFavorited ? "star.fill" : "star")
+                    }
                     ShareLink(item: shareText) { Label("Share", systemImage: "square.and.arrow.up") }
                     Button(role: .destructive) { showDelete = true } label: { Label("Delete", systemImage: "trash") }
                 } label: {
@@ -209,6 +214,23 @@ struct FoodDetailView: View {
 
     private var shareText: String {
         "\(entry.name.isEmpty ? "Meal" : entry.name) — \(entry.totalKcal) kcal (P\(entry.protein) / C\(entry.carbs) / F\(entry.fat)). Logged with CalorieBuddy."
+    }
+
+    private var isFavorited: Bool {
+        favorites.contains { $0.name.caseInsensitiveCompare(entry.name) == .orderedSame }
+    }
+
+    private func toggleFavorite() {
+        if let existing = favorites.first(where: { $0.name.caseInsensitiveCompare(entry.name) == .orderedSame }) {
+            context.delete(existing)
+        } else {
+            context.insert(FavoriteFood(name: entry.name, totalKcal: entry.totalKcal,
+                                        protein: entry.protein, carbs: entry.carbs,
+                                        fat: entry.fat, fiber: entry.fiber,
+                                        servingDesc: entry.servingDesc))
+        }
+        try? context.save()
+        Haptics.selection()
     }
 
     private func deleteEntry() {

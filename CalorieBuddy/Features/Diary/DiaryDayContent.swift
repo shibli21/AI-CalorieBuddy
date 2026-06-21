@@ -21,6 +21,7 @@ struct DiaryDayContent: View {
     @Query private var entries: [FoodEntry]
     @Query private var recentEntries: [FoodEntry]
     @Query private var streaks: [Streak]
+    @Query(sort: \FavoriteFood.createdAt, order: .reverse) private var favorites: [FavoriteFood]
     @State private var toast: ToastMessage?
 
     init(date: Date, profile: UserProfile?, onAddManual: @escaping () -> Void) {
@@ -58,6 +59,7 @@ struct DiaryDayContent: View {
         VStack(spacing: Spacing.lg) {
             summaryBar
             addBar
+            if !favorites.isEmpty { favoritesSection }
             if !recents.isEmpty { recentsSection }
             ForEach(MealType.allCases.sorted { $0.sortOrder < $1.sortOrder }) { meal in
                 MealSectionView(
@@ -145,7 +147,72 @@ struct DiaryDayContent: View {
         .cbCard()
     }
 
+    private var favoritesSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Favorites").font(CBFont.headline).foregroundStyle(Theme.ink)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: Spacing.sm) {
+                    ForEach(favorites) { fav in
+                        Button { reLogFavorite(fav) } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "star.fill").font(.caption2).foregroundStyle(Theme.amber)
+                                    Text(fav.name).font(CBFont.subheadline.weight(.medium))
+                                        .foregroundStyle(Theme.ink).lineLimit(1)
+                                }
+                                Text("\(fav.totalKcal) kcal").font(CBFont.caption2).foregroundStyle(Theme.inkSecondary)
+                            }
+                            .padding(.horizontal, 14).padding(.vertical, 10)
+                            .frame(width: 150, alignment: .leading)
+                            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
+                            .overlay(alignment: .topTrailing) {
+                                Image(systemName: "plus.circle.fill").foregroundStyle(Theme.accent).padding(6)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button(role: .destructive) { deleteFavorite(fav) } label: {
+                                Label("Remove favorite", systemImage: "star.slash")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cbCard()
+    }
+
     // MARK: Actions
+
+    private func reLogFavorite(_ fav: FavoriteFood) {
+        let when = DiaryStore.timestamp(for: date)
+        let entry = FoodEntry(name: fav.name,
+                              mealType: MealType.suggested(for: when),
+                              source: .favorite,
+                              loggedAt: when)
+        entry.totalKcal = fav.totalKcal
+        entry.protein = fav.protein
+        entry.carbs = fav.carbs
+        entry.fat = fav.fat
+        entry.fiber = fav.fiber
+        entry.servingDesc = fav.servingDesc
+        entry.day = DiaryStore.day(for: when, in: context)
+        context.insert(entry)
+        if let advanced = DiaryStore.registerStreak(streaks.first, on: when, in: context) {
+            appState.celebrationDay = advanced
+        }
+        try? context.save()
+        Task { await health.save(foodEntry: entry) }
+        Haptics.success()
+        toast = ToastMessage(text: "\(fav.name) logged", systemImage: "star.fill", tint: Theme.amber)
+    }
+
+    private func deleteFavorite(_ fav: FavoriteFood) {
+        context.delete(fav)
+        try? context.save()
+        Haptics.warning()
+    }
 
     private func reLog(_ template: FoodEntry) {
         let when = DiaryStore.timestamp(for: date)

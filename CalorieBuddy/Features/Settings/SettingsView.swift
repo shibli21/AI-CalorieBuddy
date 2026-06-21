@@ -243,6 +243,7 @@ struct SettingsView: View {
         try? context.delete(model: FastingSession.self)
         try? context.delete(model: Streak.self)
         try? context.delete(model: AwardRecord.self)
+        try? context.delete(model: FavoriteFood.self)
         try? context.delete(model: UserProfile.self)
         try? context.save()
         Haptics.warning()

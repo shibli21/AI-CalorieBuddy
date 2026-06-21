@@ -20,6 +20,7 @@ enum AppContainer {
         FastingSession.self,
         Streak.self,
         AwardRecord.self,
+        FavoriteFood.self,
     ])
 
     /// Creates the app's container. Falls back to an in-memory store if the
