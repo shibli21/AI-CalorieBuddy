@@ -19,6 +19,16 @@ enum DiaryStore {
         return day
     }
 
+    /// Register a log against the streak; returns the new streak count only if
+    /// it advanced (so callers can trigger a celebration).
+    @MainActor
+    static func registerStreak(_ streak: Streak?, on date: Date) -> Int? {
+        guard let streak else { return nil }
+        let before = streak.current
+        streak.registerLog(on: date)
+        return streak.current > before ? streak.current : nil
+    }
+
     /// Timestamp to use when logging on a given calendar day: now if it's today,
     /// otherwise the current time-of-day on that day.
     static func timestamp(for date: Date) -> Date {

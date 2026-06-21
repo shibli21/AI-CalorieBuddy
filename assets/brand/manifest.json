@@ -1,0 +1,202 @@
+[
+  {
+    "key": "happy",
+    "asset": "mascot-happy",
+    "expected": "a happy fox waving"
+  },
+  {
+    "key": "excited",
+    "asset": "mascot-excited",
+    "expected": "an excited jumping fox"
+  },
+  {
+    "key": "proud",
+    "asset": "mascot-proud",
+    "expected": "a proud confident fox, paws on hips"
+  },
+  {
+    "key": "sad",
+    "asset": "mascot-sad",
+    "expected": "a sad fox with drooping ears"
+  },
+  {
+    "key": "sleeping",
+    "asset": "mascot-sleeping",
+    "expected": "a fox curled up asleep"
+  },
+  {
+    "key": "hungry",
+    "asset": "mascot-hungry",
+    "expected": "a hungry fox holding a food bowl"
+  },
+  {
+    "key": "love",
+    "asset": "mascot-love",
+    "expected": "a fox in love holding a heart"
+  },
+  {
+    "key": "wink",
+    "asset": "mascot-wink",
+    "expected": "a winking fox with a thumbs up"
+  },
+  {
+    "key": "cool",
+    "asset": "mascot-cool",
+    "expected": "a cool fox wearing sunglasses"
+  },
+  {
+    "key": "surprised",
+    "asset": "mascot-surprised",
+    "expected": "a surprised shocked fox"
+  },
+  {
+    "key": "thinking",
+    "asset": "mascot-thinking",
+    "expected": "a thinking fox, paw on chin"
+  },
+  {
+    "key": "crying",
+    "asset": "mascot-crying",
+    "expected": "a crying fox with tears"
+  },
+  {
+    "key": "laughing",
+    "asset": "mascot-laughing",
+    "expected": "a laughing fox"
+  },
+  {
+    "key": "confused",
+    "asset": "mascot-confused",
+    "expected": "a confused fox with a question mark"
+  },
+  {
+    "key": "determined",
+    "asset": "mascot-determined",
+    "expected": "a determined fox with a headband"
+  },
+  {
+    "key": "shy",
+    "asset": "mascot-shy",
+    "expected": "a shy blushing fox"
+  },
+  {
+    "key": "angry",
+    "asset": "mascot-angry",
+    "expected": "an angry grumpy fox, arms crossed"
+  },
+  {
+    "key": "worried",
+    "asset": "mascot-worried",
+    "expected": "a worried nervous fox"
+  },
+  {
+    "key": "celebrating",
+    "asset": "mascot-celebrating",
+    "expected": "a celebrating fox with confetti"
+  },
+  {
+    "key": "waving",
+    "asset": "mascot-waving",
+    "expected": "a fox waving with both paws"
+  },
+  {
+    "key": "drinking-water",
+    "asset": "mascot-drinking-water",
+    "expected": "a fox drinking a glass of water"
+  },
+  {
+    "key": "eating-salad",
+    "asset": "mascot-eating-salad",
+    "expected": "a fox eating a salad"
+  },
+  {
+    "key": "running",
+    "asset": "mascot-running",
+    "expected": "a fox running / jogging"
+  },
+  {
+    "key": "weighing",
+    "asset": "mascot-weighing",
+    "expected": "a fox standing on a scale"
+  },
+  {
+    "key": "meditating",
+    "asset": "mascot-meditating",
+    "expected": "a fox meditating cross-legged"
+  },
+  {
+    "key": "scanning",
+    "asset": "mascot-scanning",
+    "expected": "a fox photographing food with a phone"
+  },
+  {
+    "key": "cooking",
+    "asset": "mascot-cooking",
+    "expected": "a fox chef cooking"
+  },
+  {
+    "key": "trophy",
+    "asset": "mascot-trophy",
+    "expected": "a fox holding a trophy"
+  },
+  {
+    "key": "fire-streak",
+    "asset": "mascot-fire-streak",
+    "expected": "a fox with a flame / fire"
+  },
+  {
+    "key": "strong",
+    "asset": "mascot-strong",
+    "expected": "a fox flexing muscles"
+  },
+  {
+    "key": "coffee",
+    "asset": "mascot-coffee",
+    "expected": "a fox holding a coffee cup"
+  },
+  {
+    "key": "measuring",
+    "asset": "mascot-measuring",
+    "expected": "a fox with a measuring tape on its waist"
+  },
+  {
+    "key": "apple",
+    "asset": "mascot-apple",
+    "expected": "a fox holding a red apple"
+  },
+  {
+    "key": "no-junk",
+    "asset": "mascot-no-junk",
+    "expected": "a fox refusing junk food"
+  },
+  {
+    "key": "thumbs-up",
+    "asset": "mascot-thumbs-up",
+    "expected": "a fox giving thumbs up"
+  },
+  {
+    "key": "pointing",
+    "asset": "mascot-pointing",
+    "expected": "a fox pointing forward"
+  },
+  {
+    "key": "calendar",
+    "asset": "mascot-calendar",
+    "expected": "a fox holding a calendar"
+  },
+  {
+    "key": "target",
+    "asset": "mascot-target",
+    "expected": "a fox next to a bullseye target"
+  },
+  {
+    "key": "stretching",
+    "asset": "mascot-stretching",
+    "expected": "a fox stretching / doing yoga"
+  },
+  {
+    "key": "phone",
+    "asset": "mascot-phone",
+    "expected": "a fox looking at a phone app"
+  }
+]

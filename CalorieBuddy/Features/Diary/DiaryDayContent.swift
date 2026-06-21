@@ -163,7 +163,9 @@ struct DiaryDayContent: View {
         }
         entry.day = DiaryStore.day(for: when, in: context)
         context.insert(entry)
-        streaks.first?.registerLog(on: when)
+        if let advanced = DiaryStore.registerStreak(streaks.first, on: when) {
+            appState.celebrationDay = advanced
+        }
         try? context.save()
         Task { await health.save(foodEntry: entry) }
         Haptics.success()

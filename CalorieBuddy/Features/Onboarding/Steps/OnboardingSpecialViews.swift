@@ -17,6 +17,7 @@ struct PlanCalculatingView: View {
     var body: some View {
         VStack(spacing: Spacing.xl) {
             Spacer()
+            MascotView(mood: .excited, size: 92)
             ZStack {
                 ProgressRing(progress: progress, lineWidth: 16)
                     .frame(width: 168, height: 168)
@@ -70,9 +71,7 @@ struct PlanRevealView: View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
                 VStack(spacing: Spacing.xs) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 54))
-                        .foregroundStyle(Theme.brandGradient)
+                    MascotView(mood: .proud, size: 110)
                     Text("Your plan is ready!")
                         .font(CBFont.largeTitle)
                         .foregroundStyle(Theme.ink)

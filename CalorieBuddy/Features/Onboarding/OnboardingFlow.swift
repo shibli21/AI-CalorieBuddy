@@ -82,7 +82,7 @@ struct OnboardingFlow: View {
 
         case .howItWorks:
             InfoStep(title: "How CalorieBuddy works",
-                     systemImage: "sparkles",
+                     mascot: .scanning,
                      bullets: ["Snap a photo of your meal",
                                "AI estimates calories & macros",
                                "Review and log in seconds",
@@ -93,13 +93,13 @@ struct OnboardingFlow: View {
         case .petIntro:
             InfoStep(title: "Meet your buddy",
                      subtitle: "A friendly companion to keep you logging every day.",
-                     emoji: "🦊",
+                     mascot: .happy,
                      onContinue: proceed)
 
         case .petReveal:
             InfoStep(title: "Say hi to your buddy!",
                      subtitle: "Keep your streak alive and watch them thrive.",
-                     emoji: "🦊",
+                     mascot: .excited,
                      continueTitle: "Aww, hi!",
                      onContinue: proceed)
 
@@ -109,7 +109,7 @@ struct OnboardingFlow: View {
         case .remindersIntro:
             InfoStep(title: "We'll help you stay on track",
                      subtitle: "A gentle daily nudge keeps your streak going.",
-                     systemImage: "bell.badge.fill",
+                     mascot: .calendar,
                      onContinue: proceed)
 
         case .reminderTime:
@@ -124,7 +124,7 @@ struct OnboardingFlow: View {
         case .eatingHabitsIntro:
             InfoStep(title: "Let's talk about your eating habits",
                      subtitle: "This helps us personalize your plan.",
-                     systemImage: "fork.knife",
+                     mascot: .eatingSalad,
                      onContinue: proceed)
 
         case .mealsPerDay:
@@ -156,7 +156,7 @@ struct OnboardingFlow: View {
         case .waterIntro:
             InfoStep(title: "Hydration matters",
                      subtitle: "Staying hydrated supports energy, focus, and appetite control.",
-                     systemImage: "drop.fill",
+                     mascot: .drinkingWater,
                      bullets: ["Boosts metabolism", "Curbs false hunger", "Improves focus"],
                      onContinue: proceed)
 
@@ -178,7 +178,7 @@ struct OnboardingFlow: View {
         case .goalConfirmation:
             InfoStep(title: "Great choice!",
                      subtitle: "You're all set up for success. Let's get your numbers.",
-                     emoji: "🎉",
+                     mascot: .celebrating,
                      onContinue: proceed)
 
         case .sex:
@@ -206,7 +206,7 @@ struct OnboardingFlow: View {
         case .summary:
             InfoStep(title: "Here's your profile",
                      subtitle: "BMI \(String(format: "%.1f", NutritionMath.bmi(weightKg: vm.draft.currentWeightKg, heightCm: vm.draft.heightCm))) · \(NutritionMath.bmiCategory(NutritionMath.bmi(weightKg: vm.draft.currentWeightKg, heightCm: vm.draft.heightCm)))\nAge \(vm.age) · \(Int(vm.draft.currentWeightKg)) kg → \(Int(vm.draft.targetWeightKg)) kg",
-                     systemImage: "person.text.rectangle.fill",
+                     mascot: .happy,
                      onContinue: proceed)
 
         case .targetWeight:
@@ -222,7 +222,7 @@ struct OnboardingFlow: View {
         case .realisticTarget:
             InfoStep(title: "Your goal looks realistic",
                      subtitle: "We'll keep your plan safe and sustainable.",
-                     systemImage: "checkmark.shield.fill",
+                     mascot: .target,
                      onContinue: proceed)
 
         case .calculating:

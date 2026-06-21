@@ -86,7 +86,7 @@ final class ScanViewModel {
     }
 
     @MainActor
-    func save(context: ModelContext, health: HealthKitService, streak: Streak?) {
+    func save(context: ModelContext, health: HealthKitService, streak: Streak?) -> Int? {
         let entry = FoodEntry(
             name: title.trimmingCharacters(in: .whitespaces).isEmpty ? "Meal" : title,
             mealType: mealType,
@@ -108,13 +108,14 @@ final class ScanViewModel {
         entry.day = Self.fetchOrCreateDay(context: context, date: loggedAt)
 
         context.insert(entry)
-        streak?.registerLog(on: loggedAt)
+        let advanced = DiaryStore.registerStreak(streak, on: loggedAt)
         try? context.save()
 
         ScanQuota.record()
         let saved = entry
         Task { await health.save(foodEntry: saved) }
         Haptics.success()
+        return advanced
     }
 
     @MainActor

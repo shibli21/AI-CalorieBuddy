@@ -53,9 +53,7 @@ struct StatsView: View {
 
     private var lockedState: some View {
         VStack(spacing: Spacing.md) {
-            Image(systemName: "lock.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(Theme.inkTertiary)
+            MascotView(mood: .sleeping, size: 120)
             Text("Keep logging to unlock stats")
                 .font(CBFont.title3)
                 .foregroundStyle(Theme.ink)

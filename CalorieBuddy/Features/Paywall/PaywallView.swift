@@ -56,9 +56,13 @@ struct PaywallView: View {
 
     private var hero: some View {
         VStack(spacing: Spacing.sm) {
-            Image(systemName: "crown.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(Theme.brandGradient)
+            MascotView(mood: .excited, size: 104)
+                .overlay(alignment: .topTrailing) {
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 28))
+                        .foregroundStyle(Theme.amber)
+                        .offset(x: 6, y: -4)
+                }
             Text("CalorieBuddy Plus")
                 .font(CBFont.largeTitle)
                 .foregroundStyle(Theme.ink)

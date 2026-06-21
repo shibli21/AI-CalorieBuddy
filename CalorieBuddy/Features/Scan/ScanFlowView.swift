@@ -78,9 +78,7 @@ struct ScanFlowView: View {
 
             Spacer()
 
-            Image(systemName: vm.mode == .label ? "doc.text.viewfinder" : "fork.knife.circle.fill")
-                .font(.system(size: 86))
-                .foregroundStyle(Theme.brandGradient)
+            MascotView(mood: .scanning, size: 120)
             Text(vm.mode == .label ? "Scan a nutrition label" : "Snap your meal")
                 .font(CBFont.title2)
                 .foregroundStyle(Theme.ink)
@@ -165,9 +163,10 @@ struct ScanFlowView: View {
     }
 
     private func saveMeal() {
-        vm.save(context: context, health: health, streak: streaks.first)
+        let advanced = vm.save(context: context, health: health, streak: streaks.first)
         dismiss()
         appState.goToToday()
+        if let advanced { appState.celebrationDay = advanced }
     }
 }
 

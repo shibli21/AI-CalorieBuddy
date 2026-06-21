@@ -1,0 +1,6 @@
+.mcp.json
+assets/brand/icon.json
+assets/brand/*.webp
+*.fal_key
+.DS_Store
+xcuserdata/

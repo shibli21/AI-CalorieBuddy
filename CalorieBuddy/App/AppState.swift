@@ -45,6 +45,9 @@ final class AppState {
     var isShowingPaywall = false
     var paywallContext = ""
 
+    /// When set, the app shows a streak-celebration overlay for this day count.
+    var celebrationDay: Int? = nil
+
     var preferredColorScheme: ColorScheme? { appColorScheme.colorScheme }
 
     func presentScanner() {

@@ -178,6 +178,7 @@ private struct StartFastingView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.lg) {
+                HStack { Spacer(); MascotView(mood: .meditating, size: 100); Spacer() }
                 Text("Choose your fasting goal")
                     .font(CBFont.title2)
                     .foregroundStyle(Theme.ink)

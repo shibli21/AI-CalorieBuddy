@@ -115,6 +115,7 @@ struct InfoStep: View {
     var subtitle: String? = nil
     var systemImage: String? = nil
     var emoji: String? = nil
+    var mascot: MascotMood? = nil
     var bullets: [String] = []
     var continueTitle: String = "Continue"
     var onContinue: () -> Void
@@ -122,7 +123,9 @@ struct InfoStep: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
-                if let emoji {
+                if let mascot {
+                    MascotView(mood: mascot, size: 130)
+                } else if let emoji {
                     Text(emoji).font(.system(size: 68))
                 } else if let systemImage {
                     Image(systemName: systemImage)

@@ -39,6 +39,13 @@ struct MainTabView: View {
         .sheet(isPresented: $appState.isShowingPaywall) {
             PaywallView()
         }
+        .overlay {
+            if let days = appState.celebrationDay {
+                StreakCelebrationView(days: days) { appState.celebrationDay = nil }
+                    .zIndex(10)
+            }
+        }
+        .animation(.smooth(duration: 0.3), value: appState.celebrationDay)
     }
 }
 

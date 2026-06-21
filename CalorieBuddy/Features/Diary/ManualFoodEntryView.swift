@@ -14,6 +14,7 @@ struct ManualFoodEntryView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Environment(HealthKitService.self) private var health
+    @Environment(AppState.self) private var appState
     @Query private var streaks: [Streak]
 
     @State private var name = ""
@@ -79,10 +80,11 @@ struct ManualFoodEntryView: View {
         entry.fiber = fiber
         entry.day = DiaryStore.day(for: when, in: context)
         context.insert(entry)
-        streaks.first?.registerLog(on: when)
+        let advanced = DiaryStore.registerStreak(streaks.first, on: when)
         try? context.save()
         Task { await health.save(foodEntry: entry) }
         Haptics.success()
         dismiss()
+        if let advanced { appState.celebrationDay = advanced }
     }
 }

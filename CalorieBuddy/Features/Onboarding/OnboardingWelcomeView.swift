@@ -18,9 +18,7 @@ struct OnboardingWelcomeView: View {
                 Spacer()
 
                 VStack(spacing: Spacing.lg) {
-                    Image(systemName: "leaf.circle.fill")
-                        .font(.system(size: 88))
-                        .foregroundStyle(Theme.brandGradient)
+                    MascotView(mood: .happy, size: 150)
                         .cbShadow(.subtle)
 
                     Text("Reach your\nweight goals")

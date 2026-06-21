@@ -40,10 +40,13 @@ struct WaterView: View {
                     WaterBottle(progress: progress)
                         .padding(.top, Spacing.lg)
 
-                    Text("\(total) / \(goal) ml")
-                        .font(CBFont.title2)
-                        .foregroundStyle(Theme.ink)
-                        .contentTransition(.numericText())
+                    HStack(spacing: Spacing.md) {
+                        MascotView(mood: .drinkingWater, size: 56)
+                        Text("\(total) / \(goal) ml")
+                            .font(CBFont.title2)
+                            .foregroundStyle(Theme.ink)
+                            .contentTransition(.numericText())
+                    }
 
                     quickAdds
 
