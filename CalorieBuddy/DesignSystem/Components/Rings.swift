@@ -13,6 +13,7 @@ struct ProgressRing: View {
     var lineWidth: CGFloat = 14
     var colors: [Color] = [Theme.accent, Theme.accentDeep]
     var track: Color = Theme.surfaceAlt
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -25,7 +26,7 @@ struct ProgressRing: View {
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
-                .animation(.smooth(duration: 0.6), value: progress)
+                .animation(reduceMotion ? nil : .smooth(duration: 0.6), value: progress)
         }
     }
 }
@@ -52,6 +53,14 @@ struct CalorieRing: View {
                     .foregroundStyle(Theme.inkSecondary)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityName)
+        .accessibilityValue("\(displayValue) of \(target) kilocalories")
+    }
+
+    private var accessibilityName: String {
+        if mode == .consumed { return "Calories eaten" }
+        return remaining >= 0 ? "Calories remaining" : "Calories over budget"
     }
 
     private var displayValue: Int {

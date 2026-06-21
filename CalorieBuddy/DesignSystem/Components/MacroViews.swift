@@ -11,6 +11,7 @@ struct MacroBar: View {
     let kind: MacroKind
     let value: Int
     let target: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var progress: Double { target > 0 ? min(1, Double(value) / Double(target)) : 0 }
 
@@ -28,7 +29,7 @@ struct MacroBar: View {
                     Capsule()
                         .fill(Theme.color(for: kind))
                         .frame(width: max(0, geo.size.width * progress))
-                        .animation(.smooth(duration: 0.5), value: progress)
+                        .animation(reduceMotion ? nil : .smooth(duration: 0.5), value: progress)
                 }
             }
             .frame(height: 8)
@@ -37,6 +38,9 @@ struct MacroBar: View {
                 .foregroundStyle(Theme.ink)
                 .monospacedDigit()
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(kind.title)
+        .accessibilityValue("\(value) of \(target) grams")
     }
 }
 

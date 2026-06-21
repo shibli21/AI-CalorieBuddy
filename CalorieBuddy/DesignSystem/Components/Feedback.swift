@@ -62,10 +62,11 @@ extension View {
     }
 }
 
-/// Three pulsing dots for AI "analyzing…" states.
+/// Three pulsing dots for AI "analyzing…" states. Holds still under Reduce Motion.
 struct PulsingDots: View {
     var color: Color = Theme.accent
     @State private var phase = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let timer = Timer.publish(every: 0.35, on: .main, in: .common).autoconnect()
 
@@ -75,13 +76,15 @@ struct PulsingDots: View {
                 Circle()
                     .fill(color)
                     .frame(width: 8, height: 8)
-                    .opacity(phase == i ? 1 : 0.3)
-                    .scaleEffect(phase == i ? 1.2 : 1)
+                    .opacity(reduceMotion ? 0.7 : (phase == i ? 1 : 0.3))
+                    .scaleEffect(reduceMotion ? 1 : (phase == i ? 1.2 : 1))
             }
         }
         .onReceive(timer) { _ in
+            guard !reduceMotion else { return }
             withAnimation(.snappy(duration: 0.25)) { phase = (phase + 1) % 3 }
         }
+        .accessibilityLabel("Analyzing")
     }
 }
 
