@@ -75,7 +75,9 @@ enum Awards {
         }
         return result
     }
+}
 
+extension NutritionAward {
     static let fiber = NutritionAward(
         id: "fiber", title: "Rich in fiber", emoji: "🌾",
         blurb: "This meal is a great source of dietary fiber.",
