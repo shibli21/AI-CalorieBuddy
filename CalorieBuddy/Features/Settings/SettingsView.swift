@@ -44,6 +44,28 @@ struct SettingsView: View {
                     }
                 }
 
+                Section {
+                    if store.isPro {
+                        NavigationLink { CoachChatView() } label: {
+                            Label("AI Coach", systemImage: "sparkles")
+                        }
+                    } else {
+                        Button {
+                            appState.presentPaywall(context: ProFeature.aiCoach.context)
+                        } label: {
+                            HStack {
+                                Label("AI Coach", systemImage: "sparkles")
+                                Spacer()
+                                ProLockChip()
+                            }
+                        }
+                    }
+                } header: {
+                    Text("AI")
+                } footer: {
+                    Text("Chat with a friendly nutrition coach about your goals. It can be wrong and isn't medical advice.")
+                }
+
                 if let profile {
                     Section("Your plan") {
                         NavigationLink { EditPlanView(profile: profile) } label: {
@@ -244,6 +266,7 @@ struct SettingsView: View {
         try? context.delete(model: Streak.self)
         try? context.delete(model: AwardRecord.self)
         try? context.delete(model: FavoriteFood.self)
+        try? context.delete(model: CoachMessage.self)
         try? context.delete(model: UserProfile.self)
         try? context.save()
         Haptics.warning()

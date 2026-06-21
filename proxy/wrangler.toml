@@ -2,10 +2,38 @@ name = "caloriebuddy-ai-proxy"
 main = "worker.js"
 compatibility_date = "2025-09-01"
 
-# Secrets (do NOT put real values here — use `wrangler secret put`):
-#   wrangler secret put ANTHROPIC_API_KEY
-#   wrangler secret put APP_SECRET        # optional
+# --- Secrets (NEVER put real values here — use `wrangler secret put`) ---
+#   wrangler secret put OPENROUTER_API_KEY   # required
+#   wrangler secret put APP_SECRET           # optional shared secret (app sends X-App-Secret)
+
+# --- Non-secret config (safe to commit) ---
 #
-# Non-secret default model can be set as a plain var:
+# !! SAFE-BY-DEFAULT GUARD: the worker REFUSES to run unless you set APP_SECRET or
+#    bind RATE_KV (below). This stops an accidental deploy from becoming an open,
+#    unlimited proxy in front of your paid OpenRouter key. For a throwaway local
+#    smoke test only, you may override with ALLOW_OPEN_PROXY = "true".
+#    ALSO set an account-level monthly spend limit on openrouter.ai — that is the
+#    real hard backstop; the in-worker cap below is a soft guard (KV is eventual-
+#    consistent, so it can overshoot slightly under heavy concurrency).
 [vars]
-MODEL = "claude-haiku-4-5-20251001"
+CONFIDENCE_THRESHOLD = "0.6"     # below this, a scan escalates once to a stronger vision model
+MONTHLY_SPEND_CAP_USD = "0"      # 0 = disabled; set e.g. "25" to soft-cap monthly spend (needs RATE_KV)
+QUOTA_IP_MULTIPLIER = "8"        # IP-bucket ceiling = per-task limit x this (device-id is rotatable)
+# ALLOW_OPEN_PROXY = "true"      # DANGER: only for local smoke tests with no secret/KV
+# OPENROUTER_REFERER = "https://caloriebuddy.app"   # optional attribution
+#
+# Optional model overrides (otherwise DEFAULT_REGISTRY in worker.js is used):
+#   MODEL_SCAN, MODEL_SCAN_ESCALATION, MODEL_LABEL, MODEL_NL_PARSE, MODEL_INSIGHTS, MODEL_COACH
+# To use Kimi K2 for the text features (the original ask):
+#   MODEL_NL_PARSE = "moonshotai/kimi-k2.5"
+#   MODEL_INSIGHTS = "moonshotai/kimi-k2.5"
+#   MODEL_COACH    = "moonshotai/kimi-k2.5"
+# Or override the whole registry as JSON: MODEL_REGISTRY = '{"scan":{"primary":"..."}}'
+# And per-task quotas: QUOTAS = '{"coach":{"limit":40,"windowSec":3600}}'
+
+# --- Quotas + spend cap need a KV namespace. Without it, they're skipped (the
+#     proxy still works). Create one, then uncomment and paste the id:
+#       wrangler kv namespace create RATE_KV
+# [[kv_namespaces]]
+# binding = "RATE_KV"
+# id = "<paste-the-id-from-the-command-above>"

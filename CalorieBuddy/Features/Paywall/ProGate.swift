@@ -14,7 +14,7 @@ import SwiftUI
 /// A Pro-only capability, with the copy shown on its upsell card and the
 /// analytics/paywall context string passed to the paywall.
 enum ProFeature {
-    case stats, fastingPresets, fastingHistory, waterGoals, customization, labelScan, barcodeScan
+    case stats, fastingPresets, fastingHistory, waterGoals, customization, labelScan, barcodeScan, aiCoach
 
     var context: String {
         switch self {
@@ -25,6 +25,7 @@ enum ProFeature {
         case .customization: "customization"
         case .labelScan: "label-scan"
         case .barcodeScan: "barcode-scan"
+        case .aiCoach: "ai-coach"
         }
     }
 
@@ -37,6 +38,7 @@ enum ProFeature {
         case .customization: "Make it yours"
         case .labelScan: "Scan nutrition labels"
         case .barcodeScan: "Scan barcodes"
+        case .aiCoach: "Chat with your AI coach"
         }
     }
 
@@ -49,6 +51,7 @@ enum ProFeature {
         case .customization: "App icons, dashboard themes, and more."
         case .labelScan: "Point at a nutrition label and log it instantly."
         case .barcodeScan: "Scan a barcode to log packaged foods."
+        case .aiCoach: "Ask anything about your nutrition and goals, any time."
         }
     }
 }

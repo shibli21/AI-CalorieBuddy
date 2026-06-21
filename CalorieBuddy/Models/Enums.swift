@@ -197,11 +197,12 @@ enum MealType: String, Codable, CaseIterable, Identifiable {
 }
 
 enum FoodSource: String, Codable {
-    case aiPhoto, aiLabel, barcode, manual, favorite
+    case aiPhoto, aiLabel, aiText, barcode, manual, favorite
     var label: String {
         switch self {
         case .aiPhoto: "AI photo"
         case .aiLabel: "Label scan"
+        case .aiText: "AI description"
         case .barcode: "Barcode"
         case .manual: "Manual"
         case .favorite: "Saved food"
@@ -211,6 +212,7 @@ enum FoodSource: String, Codable {
         switch self {
         case .aiPhoto: "camera.fill"
         case .aiLabel: "doc.text.viewfinder"
+        case .aiText: "text.bubble.fill"
         case .barcode: "barcode.viewfinder"
         case .manual: "square.and.pencil"
         case .favorite: "star.fill"

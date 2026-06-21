@@ -12,6 +12,7 @@ struct DiaryView: View {
     @Environment(AppState.self) private var appState
     @Query private var profiles: [UserProfile]
     @State private var showManual = false
+    @State private var showDescribe = false
 
     var body: some View {
         @Bindable var appState = appState
@@ -22,7 +23,8 @@ struct DiaryView: View {
                     DayNavBar(date: $appState.selectedDate)
                     DiaryDayContent(date: appState.selectedDate,
                                     profile: profiles.first,
-                                    onAddManual: { showManual = true })
+                                    onAddManual: { showManual = true },
+                                    onAddDescribe: { showDescribe = true })
                 }
                 .padding(.horizontal, Spacing.screen)
                 .padding(.top, Spacing.sm)
@@ -37,6 +39,9 @@ struct DiaryView: View {
             .sheet(isPresented: $showManual) {
                 ManualFoodEntryView(date: appState.selectedDate)
             }
+            .sheet(isPresented: $showDescribe) {
+                AIDescribeFoodView(date: appState.selectedDate)
+            }
         }
     }
 }
@@ -45,5 +50,6 @@ struct DiaryView: View {
     DiaryView()
         .environment(AppState())
         .environment(HealthKitService())
+        .environment(AIService())
         .modelContainer(AppContainer.preview)
 }

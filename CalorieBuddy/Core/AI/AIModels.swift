@@ -20,16 +20,108 @@ enum ScanMode: String, Codable, Sendable, CaseIterable {
     }
 }
 
-struct AIRequest: Codable, Sendable {
-    var imageBase64: String
-    var mode: String
-    var hint: String?
+// MARK: - Requests (one per task; the proxy dispatches on `task`)
 
-    enum CodingKeys: String, CodingKey {
-        case imageBase64 = "image_base64"
-        case mode
-        case hint
+/// Photo scan (meal) or nutrition-label scan.
+struct AIScanRequest: Encodable, Sendable {
+    var task: String          // "scan" | "label"
+    var imageBase64: String
+    var hint: String?
+    enum CodingKeys: String, CodingKey { case task; case imageBase64 = "image_base64"; case hint }
+}
+
+/// Natural-language meal entry: free text -> structured items.
+struct AINLParseRequest: Encodable, Sendable {
+    let task = "nl-parse"
+    var text: String
+}
+
+/// AI insights over the user's logged data.
+struct AIInsightsRequest: Encodable, Sendable {
+    let task = "insights"
+    var scope: String         // "day" | "week"
+    var context: AIContext
+}
+
+/// Conversational coach turn.
+struct AICoachRequest: Encodable, Sendable {
+    let task = "coach"
+    var messages: [AICoachMessage]
+    var context: AIContext?
+}
+
+/// A single chat turn sent to the proxy (role is "user" or "assistant").
+struct AICoachMessage: Encodable, Sendable {
+    var role: String
+    var content: String
+}
+
+/// Snapshot of the user's plan + recent intake, passed as JSON the model reads.
+/// All fields optional; the synthesized encoder omits nils.
+struct AIContext: Encodable, Sendable {
+    var goal: String?
+    var dietType: String?
+    var calorieTarget: Int?
+    var consumed: Int?
+    var remaining: Int?
+    var protein: Int?
+    var carbs: Int?
+    var fat: Int?
+    var fiber: Int?
+    var proteinTarget: Int?
+    var nutritionScore: Int?
+    var meals: [AIContextMeal]?
+    var recentDays: [AIContextDay]?
+}
+
+struct AIContextMeal: Encodable, Sendable {
+    var name: String
+    var mealType: String
+    var kcal: Int
+}
+
+struct AIContextDay: Encodable, Sendable {
+    var date: String
+    var kcal: Int
+    var score: Int
+}
+
+// MARK: - Non-scan responses
+
+/// AI insight payload (insights task). Defensive decoding — fields default empty.
+struct AIInsight: Codable, Sendable {
+    var headline: String = ""
+    var summary: String = ""
+    var highlights: [String] = []
+    var suggestions: [String] = []
+
+    init(headline: String = "", summary: String = "", highlights: [String] = [], suggestions: [String] = []) {
+        self.headline = headline; self.summary = summary
+        self.highlights = highlights; self.suggestions = suggestions
     }
+
+    enum CodingKeys: String, CodingKey { case headline, summary, highlights, suggestions }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        headline = (try? c.decode(String.self, forKey: .headline)) ?? ""
+        summary = (try? c.decode(String.self, forKey: .summary)) ?? ""
+        highlights = (try? c.decode([String].self, forKey: .highlights)) ?? []
+        suggestions = (try? c.decode([String].self, forKey: .suggestions)) ?? []
+    }
+
+    var isEmpty: Bool { summary.isEmpty && highlights.isEmpty && suggestions.isEmpty }
+}
+
+/// Coach reply payload (coach task).
+struct AICoachReply: Decodable, Sendable {
+    var reply: String
+}
+
+/// Typed error body returned by the proxy (`{ error, code }`).
+struct AIProxyError: Decodable, Sendable {
+    var error: String?
+    var code: String?
 }
 
 struct AIScanItem: Codable, Identifiable, Sendable, Hashable {

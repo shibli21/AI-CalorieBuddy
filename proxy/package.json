@@ -1,0 +1,10 @@
+{
+  "name": "caloriebuddy-ai-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Serverless OpenRouter proxy for CalorieBuddy",
+  "scripts": {
+    "test": "node test/run.mjs"
+  }
+}

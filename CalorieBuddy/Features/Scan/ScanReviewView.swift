@@ -11,6 +11,8 @@ struct ScanReviewView: View {
     @Bindable var vm: ScanViewModel
     var onSave: () -> Void
     var onRetake: () -> Void
+    /// Label for the secondary button — "Retake" for photos, "Edit" for text entry.
+    var retakeTitle: String = "Retake"
 
     @State private var editingItem: AIScanItem?
 
@@ -103,7 +105,7 @@ struct ScanReviewView: View {
         }
         .safeAreaInset(edge: .bottom) {
             HStack(spacing: Spacing.md) {
-                Button("Retake", action: onRetake)
+                Button(retakeTitle, action: onRetake)
                     .buttonStyle(.cbSecondary)
                     .frame(width: 130)
                 Button("Log meal", action: onSave)

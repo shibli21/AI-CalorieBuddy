@@ -13,6 +13,7 @@ struct DiaryDayContent: View {
     let date: Date
     let profile: UserProfile?
     var onAddManual: () -> Void
+    var onAddDescribe: () -> Void
 
     @Environment(\.modelContext) private var context
     @Environment(AppState.self) private var appState
@@ -24,10 +25,11 @@ struct DiaryDayContent: View {
     @Query(sort: \FavoriteFood.createdAt, order: .reverse) private var favorites: [FavoriteFood]
     @State private var toast: ToastMessage?
 
-    init(date: Date, profile: UserProfile?, onAddManual: @escaping () -> Void) {
+    init(date: Date, profile: UserProfile?, onAddManual: @escaping () -> Void, onAddDescribe: @escaping () -> Void) {
         self.date = date
         self.profile = profile
         self.onAddManual = onAddManual
+        self.onAddDescribe = onAddDescribe
         let cal = Calendar.current
         let start = cal.startOfDay(for: date)
         let end = cal.date(byAdding: .day, value: 1, to: start) ?? start.addingTimeInterval(86_400)
@@ -59,6 +61,15 @@ struct DiaryDayContent: View {
         VStack(spacing: Spacing.lg) {
             summaryBar
             addBar
+            if !entries.isEmpty {
+                AIInsightCard(
+                    scope: "day",
+                    title: Calendar.current.isDateInToday(date) ? "Today's AI insight" : "AI insight",
+                    cacheKey: AIInsightContext.dayKey(date),
+                    signature: AIInsightContext.signature(entries: entries),
+                    contextBuilder: { AIInsightContext.day(entries: entries, profile: profile) }
+                )
+            }
             if !favorites.isEmpty { favoritesSection }
             if !recents.isEmpty { recentsSection }
             ForEach(MealType.allCases.sorted { $0.sortOrder < $1.sortOrder }) { meal in
@@ -91,32 +102,34 @@ struct DiaryDayContent: View {
     }
 
     private var addBar: some View {
-        HStack(spacing: Spacing.md) {
-            Button {
+        HStack(spacing: Spacing.sm) {
+            pill(title: "Scan", icon: "camera.fill", filled: true) {
                 appState.presentScanner()
-            } label: {
-                Label("Scan", systemImage: "camera.fill")
-                    .font(CBFont.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Theme.accent, in: Capsule())
             }
-            .buttonStyle(.plain)
-
-            Button {
+            pill(title: "Describe", icon: "sparkles", filled: false) {
+                Haptics.tap()
+                onAddDescribe()
+            }
+            pill(title: "Manual", icon: "square.and.pencil", filled: false) {
                 Haptics.tap()
                 onAddManual()
-            } label: {
-                Label("Add manually", systemImage: "square.and.pencil")
-                    .font(CBFont.subheadline.weight(.semibold))
-                    .foregroundStyle(Theme.accent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Theme.surfaceAlt, in: Capsule())
             }
-            .buttonStyle(.plain)
         }
+    }
+
+    private func pill(title: String, icon: String, filled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: icon).font(.system(size: 16, weight: .semibold))
+                Text(title).font(CBFont.caption.weight(.semibold))
+            }
+            .foregroundStyle(filled ? .white : Theme.accent)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(filled ? Theme.accent : Theme.surfaceAlt, in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title == "Describe" ? "Describe a meal with AI" : title)
     }
 
     private var recentsSection: some View {

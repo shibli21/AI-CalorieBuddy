@@ -18,13 +18,23 @@ The repo ships `CalorieBuddy/CalorieBuddy.entitlements` and the matching build s
 ## 3. Info.plist usage strings
 Provided via build settings (`INFOPLIST_KEY_*`): camera, photo library, HealthKit share/update, user tracking. Edit copy in the target build settings if you want different wording.
 
-## 4. AI proxy (Claude vision)
-The app never holds the Anthropic key. Deploy the proxy in `proxy/` (see its README — Cloudflare Worker / Vercel function):
-1. Set env `ANTHROPIC_API_KEY` on the host.
-2. Deploy; note the URL.
-3. In the app, set `AIConfig.proxyBaseURL` (or the `CB_AI_PROXY_URL` build setting / `Secrets.xcconfig`) to that URL.
-4. Optional: app-level shared secret header to stop abuse.
-- Default model: **Claude Haiku 4.5**; low-confidence retries escalate to **Sonnet 4.6**. Confirm exact model IDs with the `claude-api` reference before going live.
+## 4. AI proxy (OpenRouter)
+The app never holds the provider key — it talks to one serverless proxy that routes every
+AI feature (scan, label, natural-language entry, insights, coach) by a `task`. Deploy the
+proxy in `proxy/` (see its README — Cloudflare Worker, serverless):
+1. `wrangler secret put OPENROUTER_API_KEY` (required). Optional: `APP_SECRET`.
+2. Optional (quotas + monthly spend cap): `wrangler kv namespace create RATE_KV`, then paste
+   the id into `wrangler.toml`.
+3. `wrangler deploy`; note the URL.
+4. In the app, set the `CB_AI_PROXY_URL` build setting (e.g. via `Secrets.xcconfig`) to that
+   URL, and optionally `CB_AI_APP_SECRET`. `AIConfig.default` reads them.
+- Default models (cost-optimized split, verified 2026-06-21): cheap vision
+  `qwen/qwen3.5-flash-02-23` for scans, escalating to a stronger Gemini model on low
+  confidence; cheap text for nl-parse / insights / coach. All slugs are config — tune per task
+  via env (`MODEL_<TASK>`), or swap in Kimi K2.5 with `MODEL_NL_PARSE=moonshotai/kimi-k2.5`.
+  See `proxy/README.md` and `docs/adr/`.
+- The proxy logic is unit-tested on Windows without deploying: `cd proxy && node test/run.mjs`.
+- Until `CB_AI_PROXY_URL` is set, every AI flow runs in **demo mode** with sample results.
 
 ## 5. StoreKit (local testing)
 - `Configuration.storekit` is included with sample weekly/annual products + a free trial.

@@ -38,6 +38,13 @@ struct StatsView: View {
                         // Current streak is a free feature (SPEC §3); the full
                         // trends/charts/history are Pro.
                         streakCard
+                        AIInsightCard(
+                            scope: "week",
+                            title: "Weekly insight",
+                            cacheKey: "week7-\(AIInsightContext.dayKey(.now))",
+                            signature: AIInsightContext.signature(entries: entries),
+                            contextBuilder: { AIInsightContext.week(entries: entries, days: 7, profile: profile) }
+                        )
                         ProGate(feature: .stats) {
                             VStack(spacing: Spacing.lg) {
                                 rangePicker
@@ -245,5 +252,6 @@ private struct DayKcal: Identifiable {
     StatsView()
         .environment(AppState())
         .environment(StoreService())
+        .environment(AIService())
         .modelContainer(AppContainer.preview)
 }

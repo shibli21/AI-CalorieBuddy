@@ -72,6 +72,22 @@ final class ScanViewModel {
         confidence = result.confidence
     }
 
+    /// Load a parsed (non-photo) result straight into the editable review state.
+    /// Used by the natural-language entry flow, which reuses ScanReviewView.
+    @MainActor
+    func loadParsed(_ result: AIScanResult, at date: Date = .now) {
+        image = nil
+        loggedAt = date
+        apply(result)
+        phase = .review
+    }
+
+    /// Where a saved entry came from: a photo (meal/label) or a typed description.
+    private var resolvedSource: FoodSource {
+        if image == nil { return .aiText }
+        return mode == .label ? .aiLabel : .aiPhoto
+    }
+
     func addItem() {
         items.append(AIScanItem(name: "New item", quantity: 1, unit: "serving"))
     }
@@ -96,7 +112,7 @@ final class ScanViewModel {
         let entry = FoodEntry(
             name: title.trimmingCharacters(in: .whitespaces).isEmpty ? "Meal" : title,
             mealType: mealType,
-            source: mode == .label ? .aiLabel : .aiPhoto,
+            source: resolvedSource,
             loggedAt: loggedAt
         )
         entry.totalKcal = totalKcal
@@ -117,7 +133,9 @@ final class ScanViewModel {
         let advanced = DiaryStore.registerStreak(streak, on: loggedAt, in: context)
         try? context.save()
 
-        ScanQuota.record()
+        // The client-side free-tier quota counts photo scans only; natural-language
+        // entries are bounded server-side (per-task proxy quota), not here.
+        if image != nil { ScanQuota.record() }
         let saved = entry
         Task { await health.save(foodEntry: saved) }
         Haptics.success()

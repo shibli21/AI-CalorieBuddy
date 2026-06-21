@@ -21,6 +21,7 @@ enum AppContainer {
         Streak.self,
         AwardRecord.self,
         FavoriteFood.self,
+        CoachMessage.self,
     ])
 
     /// Creates the app's container. Falls back to an in-memory store if the
