@@ -85,10 +85,13 @@ final class FoodEntry {
     }
     var ingredientsList: [Ingredient] { ingredients ?? [] }
 
-    /// Recompute macro totals from ingredients (used after editing).
+    /// Recompute macro totals from ingredients (used after editing). Zeroes the
+    /// totals when there are no ingredients, so deleting the last ingredient
+    /// can't leave phantom calories. Callers that hold hand-entered totals with
+    /// no ingredients (manual entries) should avoid calling this — see
+    /// FoodEditView, which only recalculates ingredient-backed entries.
     func recalcFromIngredients() {
         let items = ingredientsList
-        guard !items.isEmpty else { return }
         totalKcal = items.reduce(0) { $0 + $1.kcal }
         protein = items.reduce(0) { $0 + $1.protein }
         carbs = items.reduce(0) { $0 + $1.carbs }

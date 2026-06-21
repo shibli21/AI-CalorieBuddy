@@ -18,6 +18,7 @@ struct FoodDetailView: View {
     @State private var showEdit = false
     @State private var showDelete = false
     @State private var selectedAward: NutritionAward?
+    @State private var infoTopic: NutritionInfoTopic?
 
     private var score: Int { NutritionScore.score(for: entry) }
     private var awards: [NutritionAward] { Awards.awards(for: entry) }
@@ -51,6 +52,7 @@ struct FoodDetailView: View {
         }
         .sheet(isPresented: $showEdit) { FoodEditView(entry: entry) }
         .sheet(item: $selectedAward) { AwardEducationView(award: $0) }
+        .sheet(item: $infoTopic) { NutritionInfoSheet(topic: $0) }
         .alert("Delete this meal?", isPresented: $showDelete) {
             Button("Delete", role: .destructive) { deleteEntry() }
             Button("Cancel", role: .cancel) {}
@@ -88,6 +90,7 @@ struct FoodDetailView: View {
                 Text("\(entry.totalKcal)").font(CBFont.display(40)).foregroundStyle(Theme.ink)
                 Text("kcal").font(CBFont.headline).foregroundStyle(Theme.inkSecondary)
                 Spacer()
+                infoButton(.calories)
             }
             HStack(spacing: Spacing.sm) {
                 MacroChip(kind: .protein, grams: entry.protein)
@@ -117,8 +120,17 @@ struct FoodDetailView: View {
                 Text(NutritionScore.grade(score)).font(CBFont.title3).foregroundStyle(Theme.ink)
             }
             Spacer()
+            infoButton(.score)
         }
         .cbCard()
+    }
+
+    private func infoButton(_ topic: NutritionInfoTopic) -> some View {
+        Button { infoTopic = topic } label: {
+            Image(systemName: "info.circle").foregroundStyle(Theme.inkTertiary)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("About \(topic.title)")
     }
 
     private var awardsCard: some View {
@@ -204,5 +216,65 @@ struct FoodDetailView: View {
         try? context.save()
         Haptics.warning()
         dismiss()
+    }
+}
+
+// MARK: - Nutrition info sheets
+
+enum NutritionInfoTopic: String, Identifiable {
+    case calories, score
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .calories: "How calories are estimated"
+        case .score: "About the nutrition score"
+        }
+    }
+
+    var paragraphs: [String] {
+        switch self {
+        case .calories:
+            [
+                "CalorieBuddy estimates calories from your photo with AI, then totals the macros: carbohydrate and protein each provide about 4 kcal per gram, and fat about 9 kcal per gram.",
+                "These are estimates — portion size and hidden ingredients like oils and sauces can shift the real number. Tap Edit to adjust any item or serving.",
+                "Most adults need roughly 1,800–2,400 kcal a day, but your personal target is set from your profile and goal.",
+            ]
+        case .score:
+            [
+                "The nutrition score (0–100) rates a meal's quality from its protein density, fiber, and macro balance.",
+                "More protein and fiber raise the score; very fat-heavy meals lower it. It's a guide, not a verdict — what matters is balance across the whole day.",
+                "Aim for a mix of protein, fiber-rich plants, and healthy fats.",
+            ]
+        }
+    }
+}
+
+struct NutritionInfoSheet: View {
+    let topic: NutritionInfoTopic
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    ForEach(topic.paragraphs, id: \.self) { paragraph in
+                        Text(paragraph)
+                            .font(CBFont.body)
+                            .foregroundStyle(Theme.inkSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(Spacing.screen)
+            }
+            .background(Theme.background)
+            .navigationTitle(topic.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }
