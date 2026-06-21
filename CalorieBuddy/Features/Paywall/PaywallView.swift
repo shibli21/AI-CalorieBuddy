@@ -11,9 +11,12 @@ import StoreKit
 struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(StoreService.self) private var store
+    @Environment(AppState.self) private var appState
 
     @State private var selected: Product?
     @State private var purchasing = false
+    @State private var showPrivacy = false
+    @State private var alertMessage: String?
 
     private let features: [(icon: String, text: String)] = [
         ("infinity", "Unlimited AI meal scans"),
@@ -51,6 +54,17 @@ struct PaywallView: View {
             .onChange(of: store.isPro) { _, isPro in
                 if isPro { dismiss() }
             }
+            .sheet(isPresented: $showPrivacy) {
+                NavigationStack { PrivacyView() }
+            }
+            .alert("CalorieBuddy Plus", isPresented: Binding(
+                get: { alertMessage != nil },
+                set: { if !$0 { alertMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { alertMessage = nil }
+            } message: {
+                Text(alertMessage ?? "")
+            }
         }
     }
 
@@ -66,10 +80,24 @@ struct PaywallView: View {
             Text("CalorieBuddy Plus")
                 .font(CBFont.largeTitle)
                 .foregroundStyle(Theme.ink)
-            Text("Unlock everything and reach your goals faster.")
+            Text(subhead)
                 .font(CBFont.headline)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Theme.inkSecondary)
+        }
+    }
+
+    /// Tailors the hero copy to whatever gated action brought the user here.
+    private var subhead: String {
+        switch appState.paywallContext {
+        case "scan-limit": "You've used today's free scans. Go unlimited with Plus."
+        case "stats": "Unlock full stats, trends, and weight history."
+        case "fasting-presets", "fasting-history": "Unlock every fasting window and your full history."
+        case "water-goals": "Set custom hydration goals and more with Plus."
+        case "customization": "Make CalorieBuddy yours with icons and themes."
+        case "label-scan", "barcode-scan": "Scan nutrition labels and barcodes with Plus."
+        case "onboarding": "Start strong — unlock everything and reach your goals faster."
+        default: "Unlock everything and reach your goals faster."
         }
     }
 
@@ -129,10 +157,12 @@ struct PaywallView: View {
             .disabled(selected == nil || purchasing)
             .opacity(selected == nil ? 0.5 : 1)
 
-            HStack(spacing: Spacing.lg) {
-                Button("Restore") { Task { await store.restore() } }
+            HStack(spacing: Spacing.md) {
+                Button("Restore") { restore() }
                 Text("·")
-                Text("Terms & Privacy")
+                Link("Terms", destination: AppLinks.termsEULA)
+                Text("·")
+                Button("Privacy") { showPrivacy = true }
             }
             .font(CBFont.caption)
             .foregroundStyle(Theme.inkTertiary)
@@ -156,7 +186,25 @@ struct PaywallView: View {
         Task {
             let outcome = await store.purchase(product)
             purchasing = false
-            if outcome == .success { dismiss() }
+            switch outcome {
+            case .success:
+                dismiss()
+            case .pending:
+                alertMessage = "Your purchase is pending approval. We'll unlock Plus as soon as it's approved."
+            case .failed:
+                alertMessage = "Something went wrong with the purchase. Please try again."
+            case .cancelled:
+                break
+            }
+        }
+    }
+
+    private func restore() {
+        Task {
+            await store.restore()
+            if !store.isPro {
+                alertMessage = "No previous purchases were found to restore."
+            }
         }
     }
 }

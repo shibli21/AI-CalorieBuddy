@@ -32,11 +32,17 @@ struct StatsView: View {
                     lockedState
                 } else {
                     VStack(spacing: Spacing.lg) {
-                        rangePicker
+                        // Current streak is a free feature (SPEC §3); the full
+                        // trends/charts/history are Pro.
                         streakCard
-                        calorieChartCard
-                        weightChartCard
-                        averagesCard
+                        ProGate(feature: .stats) {
+                            VStack(spacing: Spacing.lg) {
+                                rangePicker
+                                calorieChartCard
+                                weightChartCard
+                                averagesCard
+                            }
+                        }
                     }
                     .padding(.horizontal, Spacing.screen)
                     .padding(.top, Spacing.sm)
@@ -212,5 +218,7 @@ private struct DayKcal: Identifiable {
 
 #Preview {
     StatsView()
+        .environment(AppState())
+        .environment(StoreService())
         .modelContainer(AppContainer.preview)
 }

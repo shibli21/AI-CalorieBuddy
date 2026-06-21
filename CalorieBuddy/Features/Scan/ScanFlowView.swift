@@ -21,6 +21,7 @@ struct ScanFlowView: View {
 
     @State private var vm = ScanViewModel()
     @State private var showCamera = false
+    @State private var showPaywall = false
     @State private var libraryItem: PhotosPickerItem?
 
     var body: some View {
@@ -45,6 +46,14 @@ struct ScanFlowView: View {
         .fullScreenCover(isPresented: $showCamera) {
             CameraPicker { image in handle(image) }
                 .ignoresSafeArea()
+        }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
+        .onChange(of: vm.mode) { _, newMode in
+            // Nutrition-label & barcode scanning are Pro features (SPEC §3).
+            if !store.isPro && newMode != .meal {
+                vm.mode = .meal
+                showPaywall = true
+            }
         }
         .onChange(of: libraryItem) { _, item in
             guard let item else { return }

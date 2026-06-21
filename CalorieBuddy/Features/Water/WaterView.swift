@@ -14,11 +14,13 @@ struct WaterView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Environment(HealthKitService.self) private var health
+    @Environment(StoreService.self) private var store
     @Query private var profiles: [UserProfile]
     @Query private var waters: [WaterLog]
 
     @State private var showGoal = false
     @State private var showCustom = false
+    @State private var showPaywall = false
     @State private var celebrated = false
 
     init(date: Date) {
@@ -63,8 +65,13 @@ struct WaterView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { Button("Done") { dismiss() } }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { showGoal = true } label: { Image(systemName: "target") }
-                        .disabled(profiles.first == nil)
+                    Button {
+                        // Custom water goals are a Pro feature (SPEC §3).
+                        if store.isPro { showGoal = true } else { showPaywall = true }
+                    } label: {
+                        Image(systemName: store.isPro ? "target" : "lock.fill")
+                    }
+                    .disabled(profiles.first == nil)
                 }
             }
             .sheet(isPresented: $showCustom) {
@@ -75,6 +82,7 @@ struct WaterView: View {
                     WaterGoalSheet(profile: profile)
                 }
             }
+            .sheet(isPresented: $showPaywall) { PaywallView() }
             .onChange(of: reached) { _, isReached in
                 if isReached && !celebrated {
                     celebrated = true

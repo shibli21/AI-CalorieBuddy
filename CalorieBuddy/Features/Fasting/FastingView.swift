@@ -13,8 +13,11 @@ struct FastingView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Environment(NotificationService.self) private var notifications
+    @Environment(StoreService.self) private var store
     @Query private var fasts: [FastingSession]
     @Query private var profiles: [UserProfile]
+
+    @State private var showPaywall = false
 
     init() {
         _fasts = Query(sort: \FastingSession.startAt, order: .reverse)
@@ -31,7 +34,9 @@ struct FastingView: View {
                 } else {
                     StartFastingView(recent: recent,
                                      defaultPreset: profiles.first?.fastingPresetHours ?? 16,
-                                     onStart: startFast)
+                                     isPro: store.isPro,
+                                     onStart: startFast,
+                                     onRequestPro: { showPaywall = true })
                 }
             }
             .background(Theme.background)
@@ -40,6 +45,7 @@ struct FastingView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { Button("Done") { dismiss() } }
             }
+            .sheet(isPresented: $showPaywall) { PaywallView() }
         }
     }
 
@@ -169,7 +175,9 @@ private struct ActiveFastingView: View {
 
 private struct StartFastingView: View {
     let recent: [FastingSession]
+    let isPro: Bool
     var onStart: (Int, Date, Bool) -> Void
+    var onRequestPro: () -> Void
 
     @State private var preset: Int
     @State private var startNow = true
@@ -177,11 +185,17 @@ private struct StartFastingView: View {
     @State private var includeLastMeal = false
 
     private static let presets = [12, 14, 16, 18]
+    /// The single fasting window available on the free tier (SPEC §3).
+    private static let freePreset = 16
 
-    init(recent: [FastingSession], defaultPreset: Int, onStart: @escaping (Int, Date, Bool) -> Void) {
+    init(recent: [FastingSession], defaultPreset: Int, isPro: Bool,
+         onStart: @escaping (Int, Date, Bool) -> Void, onRequestPro: @escaping () -> Void) {
         self.recent = recent
+        self.isPro = isPro
         self.onStart = onStart
-        _preset = State(initialValue: Self.presets.contains(defaultPreset) ? defaultPreset : 16)
+        self.onRequestPro = onRequestPro
+        let resolved = Self.presets.contains(defaultPreset) ? defaultPreset : 16
+        _preset = State(initialValue: isPro ? resolved : Self.freePreset)
     }
 
     var body: some View {
@@ -194,9 +208,10 @@ private struct StartFastingView: View {
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.md) {
                     ForEach(Self.presets, id: \.self) { hours in
+                        let locked = !isPro && hours != Self.freePreset
                         Button {
                             Haptics.selection()
-                            preset = hours
+                            if locked { onRequestPro() } else { preset = hours }
                         } label: {
                             VStack(spacing: 4) {
                                 Text("\(hours):\(24 - hours)")
@@ -214,6 +229,10 @@ private struct StartFastingView: View {
                                 RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
                                     .strokeBorder(preset == hours ? Color.clear : Theme.separator)
                             )
+                            .overlay(alignment: .topTrailing) {
+                                if locked { ProLockChip().padding(8) }
+                            }
+                            .opacity(locked ? 0.9 : 1)
                         }
                         .buttonStyle(.plain)
                     }
@@ -230,21 +249,25 @@ private struct StartFastingView: View {
                 .cbCard()
 
                 if !recent.isEmpty {
-                    VStack(alignment: .leading, spacing: Spacing.sm) {
-                        Text("Recent fasts").font(CBFont.headline).foregroundStyle(Theme.ink)
-                        ForEach(recent) { fast in
-                            HStack {
-                                Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.accent)
-                                Text("\(fast.targetHours)h fast").font(CBFont.body).foregroundStyle(Theme.ink)
-                                Spacer()
-                                Text(fast.startAt.formatted(date: .abbreviated, time: .omitted))
-                                    .font(CBFont.caption).foregroundStyle(Theme.inkSecondary)
+                    if isPro {
+                        VStack(alignment: .leading, spacing: Spacing.sm) {
+                            Text("Recent fasts").font(CBFont.headline).foregroundStyle(Theme.ink)
+                            ForEach(recent) { fast in
+                                HStack {
+                                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.accent)
+                                    Text("\(fast.targetHours)h fast").font(CBFont.body).foregroundStyle(Theme.ink)
+                                    Spacer()
+                                    Text(fast.startAt.formatted(date: .abbreviated, time: .omitted))
+                                        .font(CBFont.caption).foregroundStyle(Theme.inkSecondary)
+                                }
+                                if fast.id != recent.last?.id { Divider().overlay(Theme.separator) }
                             }
-                            if fast.id != recent.last?.id { Divider().overlay(Theme.separator) }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .cbCard()
+                    } else {
+                        ProUpsellCard(feature: .fastingHistory, present: onRequestPro)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .cbCard()
                 }
             }
             .padding(.horizontal, Spacing.screen)

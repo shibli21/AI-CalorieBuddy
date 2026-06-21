@@ -45,6 +45,9 @@ final class AppState {
     var isShowingPaywall = false
     var paywallContext = ""
 
+    /// Set when onboarding finishes so the main shell presents the paywall once.
+    var pendingPostOnboardingPaywall = false
+
     /// When set, the app shows a streak-celebration overlay for this day count.
     var celebrationDay: Int? = nil
 

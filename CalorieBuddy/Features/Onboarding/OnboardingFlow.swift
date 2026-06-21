@@ -12,6 +12,7 @@ import SwiftData
 struct OnboardingFlow: View {
     @Environment(\.modelContext) private var context
     @Environment(NotificationService.self) private var notifications
+    @Environment(AppState.self) private var appState
     @Environment(\.requestReview) private var requestReview
     @Query private var profiles: [UserProfile]
     @State private var vm = OnboardingViewModel()
@@ -270,6 +271,8 @@ struct OnboardingFlow: View {
 
     private func finishFlow(_ vm: OnboardingViewModel) {
         vm.finish(context: context, existing: profiles.first, notifications: notifications)
+        // Show the paywall once the main shell appears (the funnel's final step).
+        appState.pendingPostOnboardingPaywall = true
     }
 
     // MARK: - Option data
@@ -325,6 +328,7 @@ struct OnboardingFlow: View {
 
 #Preview {
     OnboardingFlow()
+        .environment(AppState())
         .environment(NotificationService())
         .modelContainer(AppContainer.make(inMemory: true))
 }

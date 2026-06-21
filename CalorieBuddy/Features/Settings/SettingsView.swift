@@ -80,8 +80,20 @@ struct SettingsView: View {
                     }
 
                     Section("Customization") {
-                        NavigationLink { AppIconPickerView() } label: {
-                            Label("App icon", systemImage: "app.badge.fill")
+                        if store.isPro {
+                            NavigationLink { AppIconPickerView() } label: {
+                                Label("App icon", systemImage: "app.badge.fill")
+                            }
+                        } else {
+                            Button {
+                                appState.presentPaywall(context: ProFeature.customization.context)
+                            } label: {
+                                HStack {
+                                    Label("App icon", systemImage: "app.badge.fill")
+                                    Spacer()
+                                    ProLockChip()
+                                }
+                            }
                         }
                         NavigationLink { MascotNameView(profile: profile) } label: {
                             Label("Your buddy", systemImage: "pawprint.fill")

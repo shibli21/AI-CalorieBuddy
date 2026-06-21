@@ -11,6 +11,7 @@ import SwiftData
 
 struct MainTabView: View {
     @Environment(AppState.self) private var appState
+    @Environment(StoreService.self) private var store
 
     var body: some View {
         @Bindable var appState = appState
@@ -47,6 +48,13 @@ struct MainTabView: View {
             }
         }
         .animation(.smooth(duration: 0.3), value: appState.celebrationDay)
+        .task {
+            // Final onboarding step: surface the paywall once the shell is up.
+            guard appState.pendingPostOnboardingPaywall else { return }
+            appState.pendingPostOnboardingPaywall = false
+            try? await Task.sleep(for: .seconds(0.6))
+            if !store.isPro { appState.presentPaywall(context: "onboarding") }
+        }
     }
 }
 
@@ -72,5 +80,6 @@ private struct ScanButton: View {
 #Preview {
     MainTabView()
         .environment(AppState())
+        .environment(StoreService())
         .modelContainer(AppContainer.preview)
 }
