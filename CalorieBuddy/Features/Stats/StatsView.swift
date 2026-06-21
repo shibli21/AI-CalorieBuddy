@@ -17,6 +17,8 @@ struct StatsView: View {
     @Query private var streaks: [Streak]
     @State private var range = 7
     @State private var showLogWeight = false
+    @State private var showStatsReady = false
+    @AppStorage("cb.statsReadySeen") private var statsReadySeen = false
 
     private var profile: UserProfile? { profiles.first }
     private var target: Int { profile?.calorieTarget ?? 2000 }
@@ -62,6 +64,12 @@ struct StatsView: View {
             }
             .sheet(isPresented: $showLogWeight) {
                 LogWeightSheet(initialKg: profile?.currentWeightKg ?? 70)
+            }
+            .sheet(isPresented: $showStatsReady) {
+                StatsReadyView { statsReadySeen = true }
+            }
+            .onAppear {
+                if loggedDays >= 2 && !statsReadySeen { showStatsReady = true }
             }
         }
     }

@@ -2,7 +2,8 @@
 //  SampleData.swift
 //  CalorieBuddy
 //
-//  Seeds an in-memory context for previews and the first-run demo state.
+//  Seeds an in-memory context for SwiftUI previews (AppContainer.preview).
+//  Not used by the live app — the real store starts empty.
 //
 
 import Foundation

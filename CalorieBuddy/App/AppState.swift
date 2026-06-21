@@ -35,7 +35,10 @@ final class AppState {
     }
 
     var selectedTab: Tab = .today
-    var appColorScheme: AppColorSchemeOption = .system
+    var appColorScheme: AppColorSchemeOption = .system {
+        didSet { UserDefaults.standard.set(appColorScheme.rawValue, forKey: Self.colorSchemeKey) }
+    }
+    private static let colorSchemeKey = "cb.appColorScheme"
 
     /// The day currently being viewed on the dashboard / diary.
     var selectedDate: Date = Calendar.current.startOfDay(for: .now)
@@ -52,6 +55,13 @@ final class AppState {
     var celebrationDay: Int? = nil
 
     var preferredColorScheme: ColorScheme? { appColorScheme.colorScheme }
+
+    init() {
+        if let raw = UserDefaults.standard.string(forKey: Self.colorSchemeKey),
+           let saved = AppColorSchemeOption(rawValue: raw) {
+            appColorScheme = saved
+        }
+    }
 
     func presentScanner() {
         Haptics.medium()

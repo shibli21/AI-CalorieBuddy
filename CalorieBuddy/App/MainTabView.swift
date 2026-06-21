@@ -3,7 +3,7 @@
 //  CalorieBuddy
 //
 //  The main app shell: an iOS 26 Liquid Glass tab bar with a center scan
-//  action. Tab contents are placeholders until each feature phase lands.
+//  action, hosting the Today, Diary, Stats, and Settings tabs.
 //
 
 import SwiftUI
