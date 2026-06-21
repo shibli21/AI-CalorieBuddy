@@ -41,6 +41,7 @@ final class UserProfile {
     // Preferences
     var measurementSystemRaw: String = MeasurementSystem.metric.rawValue
     var caloriesDisplayRaw: String = CaloriesDisplayMode.remaining.rawValue
+    var dashboardBackgroundRaw: String = DashboardBackground.default.rawValue
     var mascotName: String = "Buddy"
     var remindersEnabled: Bool = false
     var reminderHour: Int = 19
@@ -77,6 +78,10 @@ final class UserProfile {
     var caloriesDisplayMode: CaloriesDisplayMode {
         get { CaloriesDisplayMode(rawValue: caloriesDisplayRaw) ?? .remaining }
         set { caloriesDisplayRaw = newValue.rawValue }
+    }
+    var dashboardBackground: DashboardBackground {
+        get { DashboardBackground(rawValue: dashboardBackgroundRaw) ?? .default }
+        set { dashboardBackgroundRaw = newValue.rawValue }
     }
 
     // MARK: - Derived

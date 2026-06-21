@@ -30,7 +30,9 @@ struct TodayView: View {
                 .padding(.top, Spacing.sm)
                 .padding(.bottom, 110)
             }
-            .background(Theme.background)
+            .background {
+                (profile?.dashboardBackground ?? .default).view.ignoresSafeArea()
+            }
             .navigationDestination(for: FoodEntry.self) { entry in
                 FoodDetailView(entry: entry)
             }

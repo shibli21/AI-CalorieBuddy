@@ -84,12 +84,24 @@ struct SettingsView: View {
                             NavigationLink { AppIconPickerView() } label: {
                                 Label("App icon", systemImage: "app.badge.fill")
                             }
+                            NavigationLink { DashboardBackgroundPickerView(profile: profile) } label: {
+                                Label("Dashboard background", systemImage: "photo.fill")
+                            }
                         } else {
                             Button {
                                 appState.presentPaywall(context: ProFeature.customization.context)
                             } label: {
                                 HStack {
                                     Label("App icon", systemImage: "app.badge.fill")
+                                    Spacer()
+                                    ProLockChip()
+                                }
+                            }
+                            Button {
+                                appState.presentPaywall(context: ProFeature.customization.context)
+                            } label: {
+                                HStack {
+                                    Label("Dashboard background", systemImage: "photo.fill")
                                     Spacer()
                                     ProLockChip()
                                 }
